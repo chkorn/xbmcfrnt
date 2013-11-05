@@ -20,23 +20,7 @@ var IS_PLAYING = false;
 var PLAYER = null;
 var SPEED = null;
 
-var displayMapping = {
-	"movies": [
-		{"title": {"name": "Title", "icon": ""}},
-		{"tagline": {"name": "Tagline", "icon": null}},
-		{"fanart": {"name": "Fanart", "icon": null}},
-		{"thumbnail": {"name": "Thumbnail", "icon": null}},
-		{"plot": {"name": "Plot", "icon": null}},
-		{"runtime": {"name": "Runtime", "icon": null}}
-	], 
-	"tvshows": {}
-};
-
 $(document).ready(function() {
-	// Navigation functionality to make urls sexy and bookmarkable
-	
-	registerNavigationHandles();
-	
 	// General...
 	$("#controls .btn").tooltip();
 	setActiveControls(false);
@@ -46,31 +30,38 @@ $(document).ready(function() {
 	setInterval("getState()", 1000);
 	
 	// Initialize Interface if there's no !#/foo/
-	if(window.location.hash || window.location.hash == "") {
+	if(!window.location.hash || window.location.hash == "") {
 		showLibrary("movies");
+	} else {
+		// If we have one, remove the active stuff..
+		$('.navbar-nav').children('.active').removeClass("active");
 	}
+	// Navigation functionality to make urls sexy and bookmarkable	
+	registerNavigationHandles();
 });
 
 var registerNavigationHandles = function(State) {
 	$(window).hashchange({
         hash: "#!/movies/",
         onSet: function() {
+			$('.navbar-nav').find('a[href="#!/movies/"]').parent().addClass("active");
             showLibrary("movies");
         },
-        onRemove: function() {
-            console.log("movies remove");
-        }
+        onRemove: libraryRefresh
     });
-	
 	$(window).hashchange({
-        hash: "#!/tv/",
-        onSet: function() {
-            showLibrary("tv");
+        hash: "#!/tvshows/",
+        onSet: function() {	
+			$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
+            showLibrary("tvshows");
         },
-        onRemove: function() {
-            console.log("tv remove");
-        }
+        onRemove: libraryRefresh
     });
+};
+var libraryRefresh = function() {
+	$('#library').html();
+	$('#loading').hide();
+	$('.navbar-nav').children('.active').removeClass("active");
 };
 
 var displayModalDetails = function(response) {
@@ -134,19 +125,23 @@ function showLibrary(type) {
 		var method = "VideoLibrary.GetMovies";
 		var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
 		// "TAGLINE?", "CAST", "cast", "tagline"]
-	} else if (type == "tv") {
+	} else if (type == "tvshows") {
 		var method = "VideoLibrary.GetTVShows";
-		var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
+		var params = { "properties": ["title", "fanart", "thumbnail", "plot"]};
 	}
 	
 	$.jsonRPC.request(method, {
 		params: params,
 	 	success: function(response) {
+			$('#loading').hide();
+			
 			var results = "";
 			if (type == "movies") {
 				results = response.result.movies;	
-			} else {
+			} else if (type == "tvshows") {
 				results = response.result.tvshows;
+			} else {
+				console.error(type + " is not yet implemented!");
 			}
 			if (results.length == 0) {
 				$('#library').text("No content yet!");
@@ -159,7 +154,7 @@ function showLibrary(type) {
 			lib.append(rows);
 			
 			$.each(results, function(idx, element) {
-				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemid="'+element.movieid+'" class="col-sm-3 col-md-2 media-item" title="'+element.movieid+'"></div>');
+				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="'+type+'" data-itemid="'+element.movieid+'" class="col-sm-3 col-md-2 media-item" title="'+element.movieid+'"></div>');
 				var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
 				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.label+' Thumbnail">');
 				var caption = $('<div class="caption"><b>'+element.label+'</b></div>');
@@ -173,10 +168,22 @@ function showLibrary(type) {
 			
 			// Load additional data when modal is opened...
 			$('#detailModal').on('show.bs.modal', function(event) {
-				var itemId = $(event.relatedTarget).data('itemid');
+				var button = $(event.relatedTarget);
+				var itemId = button.data('itemid');
+				var itemType = button.data('itemtype');
 				
-				$.jsonRPC.request('VideoLibrary.GetMovieDetails', {
-					params: { "movieid":itemId, "properties":["plot", "director", "country", "year", "genre", "studio", "trailer", "playcount", "cast"]},
+				if (type == "movies") {
+					var method = "VideoLibrary.GetMovieDetails";
+					var params = { "movieid":itemId, "properties":["plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+				} else if (type == "tvshows") {
+					var method = "VideoLibrary.GetTVShowDetails";
+					var params = { "movieid":itemId, "properties":["plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+				} else {
+					console.error(type + " is not yet implemented!");
+				}
+				
+				$.jsonRPC.request(method, {
+					params: params,
 				 	success: displayModalDetails,
 					error: function(response) {
 						console.error(response);
