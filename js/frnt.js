@@ -19,6 +19,7 @@ $.jsonRPC.setup({
 var IS_PLAYING = false;
 var PLAYER = null;
 var SPEED = null;
+var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
 
 $(document).ready(function() {
 	// General...
@@ -38,6 +39,7 @@ $(document).ready(function() {
 	}
 	// Navigation functionality to make urls sexy and bookmarkable	
 	registerNavigationHandles();
+	registerTemplateFormatters();
 });
 
 var registerNavigationHandles = function(State) {
@@ -65,50 +67,21 @@ var libraryRefresh = function() {
 };
 
 var displayModalDetails = function(response) {
-	var details = response.result.moviedetails;
+	if (CURRENT_LIBRARY == "movies") {
+		var details = response.result.moviedetails;	
+		var itemId = "movieid";
+	} else if (CURRENT_LIBRARY == "tvshows") {
+		var details = response.result.tvshowdetails;
+		var itemId = "tvshowid";
+	} else {
+		console.error(CURRENT_LIBRARY + " is not yet implemented!");
+	}
 	
-	$('#detailTitle').text(details.label);
+	$('#detailTitle').text(details.title);
 	
-	var plot = "<p>"+details.plot+"</p>";
-	
-	// Not all generes are trimmed/spaced :/
-	var info = '<h5>Details</h5><table class="table table-condensed"> \
-		<tr> \
-			<th><span class="glyphicon glyphicon-user"></span> Director:</th> \
-			<td>'+details.director+'</td> \
-			<th><span class="glyphicon glyphicon-globe"></span> Country:</th> \
-			<td>'+details.country+'</td> \
-		</tr> \
-		<tr> \
-			<th><span class="glyphicon glyphicon-calendar"></span> Year:</th> \
-			<td>'+details.year+'</td> \
-			<th><span class="glyphicon glyphicon-tag"></span> Genre:</th> \
-			<td>'+details.genre.toString().replace(/ /g, "").replace(/,/g, ", ")+'</td> \
-		</tr> \
-		<tr> \
-			<th><span class="glyphicon glyphicon-tag"></span> Studio:</th> \
-			<td>'+details.studio+'</td> \
-			<th><span class="glyphicon glyphicon-link"></span> Trailer:</th> \
-			<td>'+trailerEmbed(details.trailer)+'</td> \
-		</tr> \
-		<tr> \
-			<th><span class="glyphicon glyphicon-tag"></span> Playcount:</th> \
-			<td>'+details.playcount+'</td> \
-			<th></th> \
-			<td></td> \
-		</tr> \
-	</table> \
-	<h5>Cast</h5>';
-
-	var cast = $('<ul></ul>');
-	$.each(details.cast, function(idx, element) {
-		cast.append("<li><b>"+element.name+"</b> as "+element.role+"</li>");
-	});
-	
-	var detailContent = $('#detailContent');
-	detailContent.append(plot)
-	detailContent.append(info);
-	detailContent.append(cast);
+	$("#detailContent").loadTemplate("templates/"+CURRENT_LIBRARY+"-details.html", {
+		details: details
+    });
 
 	/*	var castList = $('<div class="row actors"></div>');
 	$.each(details.cast, function(idx, element) {
@@ -121,11 +94,13 @@ var displayModalDetails = function(response) {
 function showLibrary(type) {
 	console.log("Loading library: '"+type+"'");
 	
-	if (type == "movies") {
+	CURRENT_LIBRARY = type;
+	
+	if (CURRENT_LIBRARY == "movies") {
 		var method = "VideoLibrary.GetMovies";
 		var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
 		// "TAGLINE?", "CAST", "cast", "tagline"]
-	} else if (type == "tvshows") {
+	} else if (CURRENT_LIBRARY == "tvshows") {
 		var method = "VideoLibrary.GetTVShows";
 		var params = { "properties": ["title", "fanart", "thumbnail", "plot"]};
 	}
@@ -136,12 +111,14 @@ function showLibrary(type) {
 			$('#loading').hide();
 			
 			var results = "";
-			if (type == "movies") {
-				results = response.result.movies;	
-			} else if (type == "tvshows") {
-				results = response.result.tvshows;
+			if (CURRENT_LIBRARY == "movies") {
+				var results = response.result.movies;	
+				var itemId = "movieid";
+			} else if (CURRENT_LIBRARY == "tvshows") {
+				var results = response.result.tvshows;
+				var itemId = "tvshowid";
 			} else {
-				console.error(type + " is not yet implemented!");
+				console.error(CURRENT_LIBRARY + " is not yet implemented!");
 			}
 			if (results.length == 0) {
 				$('#library').text("No content yet!");
@@ -154,10 +131,10 @@ function showLibrary(type) {
 			lib.append(rows);
 			
 			$.each(results, function(idx, element) {
-				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="'+type+'" data-itemid="'+element.movieid+'" class="col-sm-3 col-md-2 media-item" title="'+element.movieid+'"></div>');
+				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="'+CURRENT_LIBRARY+'" data-itemid="'+element[itemId]+'" class="col-sm-3 col-md-2 media-item" title="'+element.title+'"></div>');
 				var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
-				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.label+' Thumbnail">');
-				var caption = $('<div class="caption"><b>'+element.label+'</b></div>');
+				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');
+				var caption = $('<div class="caption"><b>'+element.title+'</b></div>');
 				
 				link.append(image);
 				link.append(caption);
@@ -172,16 +149,17 @@ function showLibrary(type) {
 				var itemId = button.data('itemid');
 				var itemType = button.data('itemtype');
 				
-				if (type == "movies") {
+				if (CURRENT_LIBRARY == "movies") {
 					var method = "VideoLibrary.GetMovieDetails";
-					var params = { "movieid":itemId, "properties":["plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
-				} else if (type == "tvshows") {
+					var params = { "movieid":itemId, "properties":["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+				} else if (CURRENT_LIBRARY == "tvshows") {
 					var method = "VideoLibrary.GetTVShowDetails";
-					var params = { "movieid":itemId, "properties":["plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+					var params = { "tvshowid":itemId, "properties":["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
 				} else {
-					console.error(type + " is not yet implemented!");
+					console.error(CURRENT_LIBRARY + " is not yet implemented!");
 				}
-				
+				console.log(method);
+				console.log(params);
 				$.jsonRPC.request(method, {
 					params: params,
 				 	success: displayModalDetails,
@@ -428,7 +406,45 @@ function setIsPlaying(isPlaying) {
 	}
 }
 
-function trailerEmbed(pluginUrl) {
-	// TODO: Are video-IDs of YT always 
-	return '<a href="http://youtu.be/'+pluginUrl.substring(pluginUrl.length-11)+'" target="_blank">Watch on Youtube</1>';
+var registerTemplateFormatters = function() {
+	console.log("REGISTERR ");
+	$.addTemplateFormatter({
+		// Genres aren' always formatted the same way it seems :/
+	    GenreFormatter : function(value, template) {
+            if (value == null) {
+            	return "";
+			} else if (typeof value === "array") {
+				return value.join(", ");
+            } else if (typeof value === "object") {
+            	var genres = "";
+				$.each(value, function(idx, element) {
+					genres += element;
+					if (value.length -1 > idx) {
+						genres += ", ";
+					}
+				});
+				return genres;
+            } else if (typeof value === "string") {
+            	return value.replace(/ /g, "").replace(/,/g, ", ")
+            }
+        },
+	    TrailerFormatter : function(value, template) {
+            if (value == null) {
+            	return "No Trailer";
+			} else {
+				return '<a href="http://youtu.be/'+value.substring(value.length-11)+'" target="_blank">Watch on Youtube</1>';
+			}
+        },
+		// TODO: Check if it's possible to use the "paged" methods from the template parser instead...
+	    CastFormatter : function(value, template) {
+            if (value == null) {
+            	return "";
+            } 
+			var cast = "";
+			$.each(value, function(idx, element) {
+				cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
+			});
+			return cast;
+        },
+	});
 }
