@@ -1,0 +1,7 @@
+body {
+  padding-top: 50px;
+  padding-bottom: 150px;
+}
+body .modal-dialog {
+	width: 750px;
+}
