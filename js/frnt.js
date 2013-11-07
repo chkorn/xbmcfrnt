@@ -21,48 +21,98 @@ var PLAYER = null;
 var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
 
+Handlebars.registerHelper('episodelist', function(context, options) {
+    var ret = "";
+
+	for(var i=0, j=context.length; i<j; i++) {
+		ret = ret + options.fn(context[i]);
+	}
+
+	return ret;
+});
+
 $(document).ready(function() {
 	// General...
 	$("#controls .btn").tooltip();
 	setActiveControls(false);
 	bindControls();
 	
-	// Refresh player every X seconds to make sure we display the correct values...
-	setInterval("getState()", 1000);
+	$.handlebars({
+		templatePath: 'templates/',
+	    templateExtension: 'hbs'
+	});
 	
-	// Initialize Interface if there's no !#/foo/
-	if(!window.location.hash || window.location.hash == "") {
-		showLibrary("movies");
-	} else {
-		// If we have one, remove the active stuff..
-		$('.navbar-nav').children('.active').removeClass("active");
-	}
+	// Refresh player every X seconds to make sure we display the correct values...
+	//setInterval("getState()", 1000);
+	
 	// Navigation functionality to make urls sexy and bookmarkable	
-	registerNavigationHandles();
 	registerTemplateFormatters();
+	
+	navigationHandler();
+	$(window).bind("hashchange", navigationHandler);
 });
 
-var registerNavigationHandles = function(State) {
-	$(window).hashchange({
-        hash: "#!/movies/",
-        onSet: function() {
-			$('.navbar-nav').find('a[href="#!/movies/"]').parent().addClass("active");
-            showLibrary("movies");
-        },
-        onRemove: libraryRefresh
-    });
-	$(window).hashchange({
-        hash: "#!/tvshows/",
-        onSet: function() {	
-			$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
-            showLibrary("tvshows");
-        },
-        onRemove: libraryRefresh
-    });
+var navigationHandler = function() {
+	// Note: It would be much cooler to use the History API but no idea how to achieve this without the ability to RedirectMatch...
+	var hash = window.location.hash;
+	console.log("navigationHandler");
+	if (!hash || hash == "" || hash == "#!/movies/") {
+		console.log("nav: movies");
+		libraryRefresh();
+		$('.navbar-nav').find('a[href="#!/movies/"]').parent().addClass("active");
+        showLibrary("movies");
+	} else if (hash == "#!/tvshows/") {
+		console.log("nav: tvshows");
+		libraryRefresh();
+		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
+        showLibrary("tvshows");
+	} else if (hash.match(/^#!\/tvshows\//)) {
+		console.log("nav: tvshows->details");
+		libraryRefresh();
+		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
+		showSeriesDetails(hash.substring(11));
+	}
 };
+
+var showSeriesDetails = function(seriesId) {
+	console.log("Loading " + seriesId);
+	$.jsonRPC.request('VideoLibrary.GetSeasons', {
+		params: { "tvshowid":parseInt(7), "properties": ["season", "fanart", "thumbnail"]},
+	 	success: function(response) {
+			$('#library').html("<h1>Your Show...</h1>");
+			var seasons = response.result.seasons;
+			var nav = $('<ul class="nav nav-tabs"></ul>');
+			$('#library').append(nav);
+
+			var seasonList = $("<div class='tab-content'></div>")
+			$('#library').append(seasonList);
+			
+			$.each(seasons, function(idx, element) {
+				nav.append($('<li><a data-toggle="tab" href="#season-'+element.season+'">Season '+element.season+'</a></li>'));
+				$.jsonRPC.request('VideoLibrary.GetEpisodes', {
+					params: { "tvshowid":parseInt(7), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "season", "fanart", "thumbnail"]},
+				 	success: function(response) {
+						var episodes = response.result.episodes;
+						seasonList.append($('<div class="tab-pane'+(element.season == 1 ? ' active' : '')+'" id="season-'+element.season+'"></div>').render('tvshow-episodes', {episodes:episodes}));
+						$('#loading').hide();
+					},
+					error: function(response) {
+						console.error(response);
+					}
+				});
+			});
+			
+			$('#loading').hide();
+		},
+		error: function(response) {
+			console.error(response);
+		}
+	});	
+}
+
 var libraryRefresh = function() {
-	$('#library').html();
-	$('#loading').hide();
+	$('#library').html("");
+	$('#loading').show();
 	$('.navbar-nav').children('.active').removeClass("active");
 };
 
@@ -93,17 +143,19 @@ var displayModalDetails = function(response) {
 
 function showLibrary(type) {
 	console.log("Loading library: '"+type+"'");
-	
+	libraryRefresh()
 	CURRENT_LIBRARY = type;
 	
 	if (CURRENT_LIBRARY == "movies") {
-		var method = "VideoLibrary.GetMovies";
-		var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
-		// "TAGLINE?", "CAST", "cast", "tagline"]
+		showMovieLibrary();
 	} else if (CURRENT_LIBRARY == "tvshows") {
-		var method = "VideoLibrary.GetTVShows";
-		var params = { "properties": ["title", "fanart", "thumbnail", "plot"]};
+		showTVShowsLibrary();
 	}
+}
+
+var showMovieLibrary = function() {
+	var method = "VideoLibrary.GetMovies";
+	var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
 	
 	$.jsonRPC.request(method, {
 		params: params,
@@ -114,9 +166,11 @@ function showLibrary(type) {
 			if (CURRENT_LIBRARY == "movies") {
 				var results = response.result.movies;	
 				var itemId = "movieid";
+				var name = "Movies";
 			} else if (CURRENT_LIBRARY == "tvshows") {
 				var results = response.result.tvshows;
 				var itemId = "tvshowid";
+				var name = "TV Shows";
 			} else {
 				console.error(CURRENT_LIBRARY + " is not yet implemented!");
 			}
@@ -125,7 +179,7 @@ function showLibrary(type) {
 				return;
 			} 
 			var lib = $('#library');
-			lib.html("<h1>Your Movies ("+results.length+")</h1>");
+			lib.html("<h1>Your "+name+" ("+results.length+")</h1>");
 			
 			var rows = $('<div class="row"/>');
 			lib.append(rows);
@@ -168,6 +222,46 @@ function showLibrary(type) {
 					}
 				});
 			});
+		},
+		error: function(response) {
+			console.error(response);
+		}
+	});	
+}
+
+var showTVShowsLibrary = function() {
+	$.jsonRPC.request("VideoLibrary.GetTVShows", {
+		params: { "properties": ["title", "fanart", "thumbnail", "plot"]},
+	 	success: function(response) {
+			$('#loading').hide();
+			var results = response.result.tvshows;
+			var itemId = "tvshowid";
+			var name = "TV Shows";
+
+			if (results.length == 0) {
+				$('#library').text("No content yet!");
+				return;
+			} 
+			
+			var lib = $('#library');
+			lib.html("<h1>Your TV Shows ("+results.length+")</h1>");
+			
+			var rows = $('<div class="row"/>');
+			lib.append(rows);
+			
+			$.each(results, function(idx, element) {
+				console.log(element);
+				var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="'+element.title+'"></div>');
+				var link = $('<a href="#!/tvshows/'+element.tvshowid+'" style="height: 280px" class="thumbnail"></a>');
+				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');
+				var caption = $('<div class="caption"><b>'+element.title+'</b></div>');
+				
+				link.append(image);
+				link.append(caption);
+				thumb.append(link);
+				lib.append(thumb);
+			});
+			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
 		},
 		error: function(response) {
 			console.error(response);

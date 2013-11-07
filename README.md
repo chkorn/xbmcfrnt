@@ -1,7 +1,8 @@
 xbmcfrnt
 ========
-
 XBMC Frontend Testing...
+
+NOTE: This is very much work in progress... 
 
 
 Attribution
