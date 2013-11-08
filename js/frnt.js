@@ -21,14 +21,11 @@ var PLAYER = null;
 var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
 
-Handlebars.registerHelper('episodelist', function(context, options) {
-    var ret = "";
-
-	for(var i=0, j=context.length; i<j; i++) {
-		ret = ret + options.fn(context[i]);
+Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
+	if (runtime == 0) {
+		return "--:--:--";
 	}
-
-	return ret;
+	return moment().startOf('day').seconds(runtime).format("HH:mm:ss");
 });
 
 $(document).ready(function() {
@@ -43,13 +40,15 @@ $(document).ready(function() {
 	});
 	
 	// Refresh player every X seconds to make sure we display the correct values...
-	//setInterval("getState()", 1000);
+	setInterval("getState()", 1000);
 	
 	// Navigation functionality to make urls sexy and bookmarkable	
 	registerTemplateFormatters();
 	
 	navigationHandler();
 	$(window).bind("hashchange", navigationHandler);
+	$('#volumebar').slider({min: 0, max: 100, value: 50});
+	console.log("F");
 });
 
 var navigationHandler = function() {
@@ -77,23 +76,26 @@ var navigationHandler = function() {
 var showSeriesDetails = function(seriesId) {
 	console.log("Loading " + seriesId);
 	$.jsonRPC.request('VideoLibrary.GetSeasons', {
-		params: { "tvshowid":parseInt(7), "properties": ["season", "fanart", "thumbnail"]},
+		params: { "tvshowid":parseInt(seriesId), "properties": ["showtitle", "season", "fanart", "thumbnail"]},
 	 	success: function(response) {
-			$('#library').html("<h1>Your Show...</h1>");
 			var seasons = response.result.seasons;
-			var nav = $('<ul class="nav nav-tabs"></ul>');
+			$('#library').html("<h1>"+seasons[0].showtitle+"</h1>");
+			var nav = $('<ul class="nav nav-tabs" id="seasonTabs"></ul>');
 			$('#library').append(nav);
 
 			var seasonList = $("<div class='tab-content'></div>")
 			$('#library').append(seasonList);
 			
 			$.each(seasons, function(idx, element) {
-				nav.append($('<li><a data-toggle="tab" href="#season-'+element.season+'">Season '+element.season+'</a></li>'));
+				nav.append($('<li'+(element.season == 1 ? ' class="active" ' : '')+' ><a data-toggle="tab" href="#season-'+element.season+'">Season '+element.season+'</a></li>'));
 				$.jsonRPC.request('VideoLibrary.GetEpisodes', {
-					params: { "tvshowid":parseInt(7), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "season", "fanart", "thumbnail"]},
+					params: { "tvshowid":parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail"]},
 				 	success: function(response) {
 						var episodes = response.result.episodes;
-						seasonList.append($('<div class="tab-pane'+(element.season == 1 ? ' active' : '')+'" id="season-'+element.season+'"></div>').render('tvshow-episodes', {episodes:episodes}));
+						var tab = $('<div class="tab-pane'+(element.season == 1 ? ' active' : '')+'" id="season-'+element.season+'"></div>');
+						tab.render('tvshow-episodes', {episodes:episodes});
+						seasonList.append(tab);
+						tab.tab();
 						$('#loading').hide();
 					},
 					error: function(response) {
@@ -385,27 +387,37 @@ function speedUpdate(newSpeed) {
 
 function updateSeekBar() {
 	if (PLAYER) {
-		var parms = { "properties": ["percentage", "time", "totaltime", "speed"], "playerid": PLAYER};
-		$.jsonRPC.request('Player.GetProperties', {
-			params: parms,
-		 	success: function(response) {
-				// Update progressbar
-				var pct = Math.round(response.result.percentage);
-				$('#seekbar').attr("aria-valuenow", pct);
-				$('#seekbar').css("width", pct+"%");
+		$.jsonRPC.batchRequest([
+				{ method: 'Player.GetProperties', params: { "properties": ["percentage", "time", "totaltime", "speed"], "playerid": PLAYER}},
+				{ method: 'Application.GetProperties', params: { "properties": ["volume", "muted"] }}
+			],{
+				success: function(response) {
+					var player = response[0].result;
+					var application = response[1].result;
+					
+					// Update progressbar
+					var pct = Math.round(player.percentage);
+					$('#seekbar').attr("aria-valuenow", pct);
+					$('#seekbar').css("width", pct+"%");
+					
+					// Update volume
+					console.log(application.volume);
+					$('#volumebar').attr("aria-valuenow", application.volume);
+					$('#volumebar').css("width", application.volume+"%");
 			
-				speedUpdate(response.result.speed);
+					speedUpdate(player.speed);
 			
-				// Set current time...
-				$('#time').text(formatTime(response.result.time));
+					// Set current time...
+					$('#time').text(formatTime(player.time));
 			
-				// We don't need to update this every seconds.. Move it somewhere else later! TODO
-				$('#totaltime').text(formatTime(response.result.totaltime));
-			},
-			error: function(response) {
-				console.log(response);
+					// We don't need to update this every seconds.. Move it somewhere else later! TODO
+					$('#totaltime').text(formatTime(player.totaltime));
+				},
+				error: function(result) {
+					console.error(result);
+				}
 			}
-		});	
+		);
 	} else {
 		// Resetting...
 		$('#seekbar').attr("aria-valuenow", 0);
@@ -501,7 +513,6 @@ function setIsPlaying(isPlaying) {
 }
 
 var registerTemplateFormatters = function() {
-	console.log("REGISTERR ");
 	$.addTemplateFormatter({
 		// Genres aren' always formatted the same way it seems :/
 	    GenreFormatter : function(value, template) {

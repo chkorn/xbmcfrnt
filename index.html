@@ -11,6 +11,7 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
+		<link href="css/slider.css" rel="stylesheet" media="screen">
 		<link href="css/frnt.css" rel="stylesheet" media="screen">
   </head>
   <body>
@@ -69,13 +70,46 @@
 				
 		<nav class="navbar navbar-default navbar-fixed-bottom " role="navigation">
 			<div class="container">
-				<div class="progress progress-striped active">
-				  <div id="seekbar" class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-				    <span class="sr-only">40% complete</span>
-				  </div>
+				<div class="row well">
+					<div class="btn-group navbar-btn btn-group-player" id="controls">
+						<button data-toggle="tooltip" title="Jump to beginning or previous item in playlist" type="button" class="btn btn-default" id="control-prev">
+						  <span class="glyphicon glyphicon-fast-backward"></span>
+						</button>
+						<button data-toggle="tooltip" title="Rewind" type="button" class="btn btn-default" id="control-backward">
+						  <span class="glyphicon glyphicon-backward"></span>
+						</button>
+						<button data-toggle="tooltip" title="Start or pause playback" data-type="button" class="btn btn-default" id="control-playpause">
+						  <span class="glyphicon glyphicon-play"></span>
+						</button>
+						<button data-toggle="tooltip" title="Stop playback" type="button" class="btn btn-default" id="control-stop">
+						  <span class="glyphicon glyphicon-stop"></span>
+						</button>
+						<button data-toggle="tooltip" title="Increase playback speed" type="button" class="btn btn-default" id="control-forward">
+						  <span class="glyphicon glyphicon-forward"></span>
+						</button>
+						<button data-toggle="tooltip" title="Jump to next item in playlist" type="button" class="btn btn-default" id="control-next">
+						  <span class="glyphicon glyphicon-fast-forward"></span>
+						</button>
+						<div class="group-element">
+							<div class="progress active" style="width: 200px;">
+								<div id="seekbar" class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 40%">
+									<span class="sr-only">40% complete</span>
+								</div>
+							</div>
+						</div>
+						<div class="group-element time-info">
+							<span id="time">00:00</span> / <span id="totaltime">&infin;</span>
+						</div>
+						<div class="group-element" style="width: 150px;">
+							<div id="volumebar" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0"></div>
+							<!--<div class="progress active" style="width: 100px;">
+								<div id="volumebar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
+									<span class="sr-only">40% complete</span>
+								</div>
+							</div>-->
+						</div>
+					</div>
 				</div>
-				<span id="time">00:00</span>
-				<span class="pull-right" id="totaltime">&infin;</span>
 			</div>
 			<div class="container">
 				<div class="btn-group navbar-btn" id="controls">
@@ -137,6 +171,8 @@
 
 		<script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+		<script src="js/bootstrap-slider.js"></script>
+    <script src="js/moment-with-langs.min.js"></script>
     <script src="js/handlebars-v1.1.2.js"></script>
     <script src="js/jquery.handlebars.min.js"></script>
 		<script src="js/jquery.loadTemplate.min.js"></script>

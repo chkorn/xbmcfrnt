@@ -1,12 +1,26 @@
-<table class="table">
+<table class="table table-hover table-striped">
 	<tr>
 		<th>#</th>
 		<th>Title</th>
+		<th>Runtime</th>
+		<th></th>
 	</tr>
 	{{#each episodes}}
 	<tr>
 		<td>{{this.episode}}</td>
 		<td>{{this.title}}</td>
+		<td>{{inHoursMinutesSeconds this.runtime}}</td>
+		<td>
+			<button type="button" class="btn btn-default btn-sm">
+				<span class="glyphicon glyphicon-play"></span>
+			</button>
+			<button type="button" class="btn btn-default btn-sm">
+				<span class="glyphicon glyphicon-list"></span>
+			</button>
+			<button type="button" class="btn btn-default btn-sm">
+				<span class="glyphicon glyphicon-info-sign"></span>
+			</button>
+		</td>
 	</tr>
 	{{/each}}
 </table>
