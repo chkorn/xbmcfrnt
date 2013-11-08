@@ -202,8 +202,12 @@ background-color:#FFFFFF}
 .time-info {
 	padding-top: 5px;
 }
-.group-element > .progress {
+.group-element > .progress, 
+.group-element > .slider {
 	height: 10px;
+}
+.group-element > .slider {
+	margin-top: 4px;
 }
 .btn-group-player > .group-element:last-child {
 	border-top-right-radius: 4px;
