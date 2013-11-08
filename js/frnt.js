@@ -15,8 +15,7 @@ $.jsonRPC.setup({
   //namespace: ''
 });
 
-// Global stuff we don't want to query/pass-through all the time... 
-var IS_PLAYING = false;
+// Global stuff we don't want to query/pass-through all the time...
 var PLAYER = null;
 var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
@@ -31,7 +30,7 @@ Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 
 $(document).ready(function() {
 	// General...
-	$("#controls .btn").tooltip();
+	$("#controls").find(".btn").tooltip();
 	setActiveControls(false);
 	bindControls();
 	
@@ -74,44 +73,45 @@ var navigationHandler = function() {
 	}
 };
 
-var showSeriesDetails = function(seriesId) {
-	console.log("Loading " + seriesId);
-	$.jsonRPC.request('VideoLibrary.GetSeasons', {
-		params: { "tvshowid":parseInt(seriesId), "properties": ["showtitle", "season", "fanart", "thumbnail"]},
-	 	success: function(response) {
-			var seasons = response.result.seasons;
-			$('#library').html("<h1>"+seasons[0].showtitle+"</h1>");
-			var nav = $('<ul class="nav nav-tabs" id="seasonTabs"></ul>');
-			$('#library').append(nav);
+var showSeriesDetails = function (seriesId) {
+    console.log("Loading " + seriesId);
+    $.jsonRPC.request('VideoLibrary.GetSeasons', {
+        params: { "tvshowid": parseInt(seriesId), "properties": ["showtitle", "season", "fanart", "thumbnail"]},
+        success: function (response) {
+            var seasons = response.result.seasons;
+            var library = $('#library');
+            library.html("<h1>" + seasons[0].showtitle + "</h1>");
+            var nav = $('<ul class="nav nav-tabs" id="seasonTabs"></ul>');
+            library.append(nav);
 
-			var seasonList = $("<div class='tab-content'></div>")
-			$('#library').append(seasonList);
-			
-			$.each(seasons, function(idx, element) {
-				nav.append($('<li'+(element.season == 1 ? ' class="active" ' : '')+' ><a data-toggle="tab" href="#season-'+element.season+'">Season '+element.season+'</a></li>'));
-				$.jsonRPC.request('VideoLibrary.GetEpisodes', {
-					params: { "tvshowid":parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail"]},
-				 	success: function(response) {
-						var episodes = response.result.episodes;
-						var tab = $('<div class="tab-pane'+(element.season == 1 ? ' active' : '')+'" id="season-'+element.season+'"></div>');
-						tab.render('tvshow-episodes', {episodes:episodes});
-						seasonList.append(tab);
-						tab.tab();
-						$('#loading').hide();
-					},
-					error: function(response) {
-						console.error(response);
-					}
-				});
-			});
-			
-			$('#loading').hide();
-		},
-		error: function(response) {
-			console.error(response);
-		}
-	});	
-}
+            var seasonList = $("<div class='tab-content'></div>")
+            library.append(seasonList);
+
+            $.each(seasons, function (idx, element) {
+                nav.append($('<li' + (element.season == 1 ? ' class="active" ' : '') + ' ><a data-toggle="tab" href="#season-' + element.season + '">Season ' + element.season + '</a></li>'));
+                $.jsonRPC.request('VideoLibrary.GetEpisodes', {
+                    params: { "tvshowid": parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail"]},
+                    success: function (response) {
+                        var episodes = response.result.episodes;
+                        var tab = $('<div class="tab-pane' + (element.season == 1 ? ' active' : '') + '" id="season-' + element.season + '"></div>');
+                        tab.render('tvshow-episodes', {episodes: episodes});
+                        seasonList.append(tab);
+                        tab.tab();
+                        $('#loading').hide();
+                    },
+                    error: function (response) {
+                        console.error(response);
+                    }
+                });
+            });
+
+            $('#loading').hide();
+        },
+        error: function (response) {
+            console.error(response);
+        }
+    });
+};
 
 var libraryRefresh = function() {
 	$('#library').html("");
@@ -142,9 +142,9 @@ var displayModalDetails = function(response) {
 	});
 	itemDetails.append(castList);
 	$('.actors').find('.thumbnail').uniformHeight();*/
-}
+};
 
-function showLibrary(type) {
+var showLibrary = function(type) {
 	console.log("Loading library: '"+type+"'");
 	libraryRefresh()
 	CURRENT_LIBRARY = type;
@@ -154,83 +154,84 @@ function showLibrary(type) {
 	} else if (CURRENT_LIBRARY == "tvshows") {
 		showTVShowsLibrary();
 	}
-}
+};
 
-var showMovieLibrary = function() {
-	var method = "VideoLibrary.GetMovies";
-	var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
-	
-	$.jsonRPC.request(method, {
-		params: params,
-	 	success: function(response) {
-			$('#loading').hide();
-			
-			var results = "";
-			if (CURRENT_LIBRARY == "movies") {
-				var results = response.result.movies;	
-				var itemId = "movieid";
-				var name = "Movies";
-			} else if (CURRENT_LIBRARY == "tvshows") {
-				var results = response.result.tvshows;
-				var itemId = "tvshowid";
-				var name = "TV Shows";
-			} else {
-				console.error(CURRENT_LIBRARY + " is not yet implemented!");
-			}
-			if (results.length == 0) {
-				$('#library').text("No content yet!");
-				return;
-			} 
-			var lib = $('#library');
-			lib.html("<h1>Your "+name+" ("+results.length+")</h1>");
-			
-			var rows = $('<div class="row"/>');
-			lib.append(rows);
-			
-			$.each(results, function(idx, element) {
-				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="'+CURRENT_LIBRARY+'" data-itemid="'+element[itemId]+'" class="col-sm-3 col-md-2 media-item" title="'+element.title+'"></div>');
-				var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
-				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');
-				var caption = $('<div class="caption"><b>'+element.title+'</b></div>');
-				
-				link.append(image);
-				link.append(caption);
-				thumb.append(link);
-				lib.append(thumb);
-			});
-			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
-			
-			// Load additional data when modal is opened...
-			$('#detailModal').on('show.bs.modal', function(event) {
-				var button = $(event.relatedTarget);
-				var itemId = button.data('itemid');
-				var itemType = button.data('itemtype');
-				
-				if (CURRENT_LIBRARY == "movies") {
-					var method = "VideoLibrary.GetMovieDetails";
-					var params = { "movieid":itemId, "properties":["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
-				} else if (CURRENT_LIBRARY == "tvshows") {
-					var method = "VideoLibrary.GetTVShowDetails";
-					var params = { "tvshowid":itemId, "properties":["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
-				} else {
-					console.error(CURRENT_LIBRARY + " is not yet implemented!");
-				}
-				console.log(method);
-				console.log(params);
-				$.jsonRPC.request(method, {
-					params: params,
-				 	success: displayModalDetails,
-					error: function(response) {
-						console.error(response);
-					}
-				});
-			});
-		},
-		error: function(response) {
-			console.error(response);
-		}
-	});	
-}
+var showMovieLibrary = function () {
+    var method = "VideoLibrary.GetMovies";
+    var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
+
+    $.jsonRPC.request(method, {
+        params: params,
+        success: function (response) {
+            $('#loading').hide();
+
+            var results = null;
+            if (CURRENT_LIBRARY == "movies") {
+                results = response.result.movies;
+                var itemId = "movieid";
+                var name = "Movies";
+            } else if (CURRENT_LIBRARY == "tvshows") {
+                results = response.result.tvshows;
+                var itemId = "tvshowid";
+                var name = "TV Shows";
+            } else {
+                console.error(CURRENT_LIBRARY + " is not yet implemented!");
+            }
+            if (results.length == 0) {
+                $('#library').text("No content yet!");
+                return;
+            }
+            var lib = $('#library');
+            lib.html("<h1>Your " + name + " (" + results.length + ")</h1>");
+
+            var rows = $('<div class="row"/>');
+            lib.append(rows);
+
+            $.each(results, function (idx, element) {
+                var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="' + CURRENT_LIBRARY + '" data-itemid="' + element[itemId] + '" class="col-sm-3 col-md-2 media-item" title="' + element.title + '"></div>');
+                var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
+                var image = $('<img style="height: 230px;" src="/vfs/' + encodeURIComponent(element.thumbnail) + '" alt="' + element.title + ' Thumbnail">');
+                var caption = $('<div class="caption"><b>' + element.title + '</b></div>');
+
+                link.append(image);
+                link.append(caption);
+                thumb.append(link);
+                lib.append(thumb);
+            });
+            //TODO: $(".media-item").popover({html: true, trigger: "hover"});
+
+            // Load additional data when modal is opened...
+            $('#detailModal').on('show.bs.modal', function (event) {
+                var method;
+                var params;
+                var button = $(event.relatedTarget);
+                var itemId = button.data('itemid');
+
+                if (CURRENT_LIBRARY == "movies") {
+                    method = "VideoLibrary.GetMovieDetails";
+                    params = { "movieid": itemId, "properties": ["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+                } else if (CURRENT_LIBRARY == "tvshows") {
+                    method = "VideoLibrary.GetTVShowDetails";
+                    params = { "tvshowid": itemId, "properties": ["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
+                } else {
+                    console.error(CURRENT_LIBRARY + " is not yet implemented!");
+                }
+                console.log(method);
+                console.log(params);
+                $.jsonRPC.request(method, {
+                    params: params,
+                    success: displayModalDetails,
+                    error: function (response) {
+                        console.error(response);
+                    }
+                });
+            });
+        },
+        error: function (response) {
+            console.error(response);
+        }
+    });
+};
 
 var showTVShowsLibrary = function() {
 	$.jsonRPC.request("VideoLibrary.GetTVShows", {
@@ -301,7 +302,7 @@ function getPlayingInfo(mediaType) {
 			$('#nowplaying').text('Now Playing: ' + item.showtitle + " - " + item.label);
 			
 			// Update Seekbar...
-			updateSeekBar(PLAYER);
+			updateSeekBar();
 		},
 		error: function(response) {
 			console.error(response);
@@ -350,7 +351,7 @@ function getState() {
 			}
 		},
 		error: function(response) {
-			console.log("GETSTATEERROR");
+			console.log(response);
 		}
 	});
 }
@@ -383,7 +384,6 @@ function speedUpdate(newSpeed) {
 	} else if (newSpeed == 0 && (SPEED == 1 || SPEED == null)) {
 		// Was playing, now paused
 		setIsPlaying(true);
-		resetSeekControls();
 	} else if (newSpeed > 1) {
 		console.log("FASTER THAN ONE!");
 		setIsForwarding(true);
@@ -409,10 +409,9 @@ function updateSeekBar() {
 					$('#seekbar').attr("aria-valuenow", pct);
 					$('#seekbar').css("width", pct+"%");*/
 					console.log(player.playlistid);
-					$.jsonRPC.request("")
-					var parts = Math.round(moment.duration(player.totaltime).asSeconds());
-					
-					
+					//var parts = Math.round(moment.duration(player.totaltime).asSeconds());
+
+
 					// Update volume
 					console.log(application.volume);
 					$('#volumebar').attr("aria-valuenow", application.volume);
@@ -430,8 +429,9 @@ function updateSeekBar() {
 		);
 	} else {
 		// Resetting...
-		$('#seekbar').attr("aria-valuenow", 0);
-		$('#seekbar').css("width", "0%");
+        var seekbar = $('#seekbar');
+        seekbar.attr("aria-valuenow", 0);
+		seekbar.css("width", "0%");
 	
 		// Set current time...
 		$('#time').text("00:00:00");
@@ -443,11 +443,11 @@ function updateSeekBar() {
 
 function setActiveControls(controlState) {
 	if (controlState) {
-		$('#controls .btn').each(function(idx, element) {
+		$("#controls").find('.btn').each(function(idx, element) {
 			$(element).removeClass("disabled");
 		});
 	} else {
-		$('#controls .btn').each(function(idx, element) {
+		$("#controls").find(".btn").each(function(idx, element) {
 			$(element).addClass("disabled");
 		});
 	}
@@ -548,12 +548,12 @@ var registerTemplateFormatters = function() {
 	    CastFormatter : function(value, template) {
             if (value == null) {
             	return "";
-            } 
+            }
 			var cast = "";
 			$.each(value, function(idx, element) {
 				cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
 			});
 			return cast;
-        },
+        }
 	});
 }
