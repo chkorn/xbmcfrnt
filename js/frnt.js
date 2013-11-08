@@ -20,6 +20,7 @@ var IS_PLAYING = false;
 var PLAYER = null;
 var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
+var CURRENT_ID = null;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	if (runtime == 0) {
@@ -271,6 +272,11 @@ var showTVShowsLibrary = function() {
 	});	
 }
 
+var newItemPlaying = function(itemId) {
+	// TODO: We don't need to update this every seconds.. Move it somewhere else later! 
+	$('#totaltime').text(formatTime(player.totaltime));
+}
+
 function getPlayingInfo(mediaType) {
 	// Get details
 	if (mediaType == "audio") {
@@ -287,6 +293,9 @@ function getPlayingInfo(mediaType) {
 		params: parms,
 	 	success: function(response) {
 			var item = response.result.item;
+			if (item.id != CURRENT_ID) {
+				CURRENT_ID = item.id;
+			}
 			
 			// Update text...
 			$('#nowplaying').text('Now Playing: ' + item.showtitle + " - " + item.label);
@@ -388,7 +397,7 @@ function speedUpdate(newSpeed) {
 function updateSeekBar() {
 	if (PLAYER) {
 		$.jsonRPC.batchRequest([
-				{ method: 'Player.GetProperties', params: { "properties": ["percentage", "time", "totaltime", "speed"], "playerid": PLAYER}},
+				{ method: 'Player.GetProperties', params: { "properties": ["percentage", "time", "totaltime", "speed", "position", "playlistid"], "playerid": PLAYER}},
 				{ method: 'Application.GetProperties', params: { "properties": ["volume", "muted"] }}
 			],{
 				success: function(response) {
@@ -396,9 +405,13 @@ function updateSeekBar() {
 					var application = response[1].result;
 					
 					// Update progressbar
-					var pct = Math.round(player.percentage);
+					/*var pct = Math.round(player.percentage);
 					$('#seekbar').attr("aria-valuenow", pct);
-					$('#seekbar').css("width", pct+"%");
+					$('#seekbar').css("width", pct+"%");*/
+					console.log(player.playlistid);
+					$.jsonRPC.request("")
+					var parts = Math.round(moment.duration(player.totaltime).asSeconds());
+					
 					
 					// Update volume
 					console.log(application.volume);
@@ -409,9 +422,6 @@ function updateSeekBar() {
 			
 					// Set current time...
 					$('#time').text(formatTime(player.time));
-			
-					// We don't need to update this every seconds.. Move it somewhere else later! TODO
-					$('#totaltime').text(formatTime(player.totaltime));
 				},
 				error: function(result) {
 					console.error(result);
@@ -472,14 +482,8 @@ function bindControls() {
 	});
 }
 
-function pad(num, size) {
-    var s = num+"";
-    while (s.length < size) s = "0" + s;
-    return s;
-}
-
 function formatTime(parts) {
-	return pad(parts.hours, 2) + ":" + pad(parts.minutes, 2) + ":" + pad(parts.seconds, 2);
+	return moment(parts).format("HH:mm:ss");
 }
 
 function setIsForwarding(isForwarding) {
