@@ -1,31 +1,31 @@
-<p data-content="details.plot"></p>
+<p>{{details.plot}}</p>
 <h5>Details</h5>
 <table class="table table-condensed"> 
 	<tr> 
 		<th><span class="glyphicon glyphicon-user"></span> Director:</th> 
-		<td data-content="details.director"></td> 
+		<td>{{details.director}}</td> 
 		<th><span class="glyphicon glyphicon-globe"></span> Country:</th> 
-		<td data-content="details.country"></td> 
+		<td>{{details.country}}</td> 
 	</tr> 
 	<tr> 
 		<th><span class="glyphicon glyphicon-calendar"></span> Year:</th> 
-		<td data-content="details.year"></td> 
+		<td>{{details.year}}</td> 
 		<th><span class="glyphicon glyphicon-tag"></span> Genre:</th> 
-		<td data-content="details.genre" data-format="GenreFormatter"></td>
+		<td>{{asGenreString details.genre}}</td>
 	</tr> 
 	<tr> 
 		<th><span class="glyphicon glyphicon-tag"></span> Studio:</th> 
-		<td data-content="details.studio"></td> 
+		<td>{{details.studio}}</td> 
 		<th><span class="glyphicon glyphicon-link"></span> Trailer:</th> 
-		<td data-content="details.trailer" data-format="TrailerFormatter"></td> 
+		<td>{{asTrailerUrl details.trailer}}</td> 
 	</tr> 
 	<tr> 
 		<th><span class="glyphicon glyphicon-tag"></span> Playcount:</th> 
-		<td data-content="details.playcount"></td> 
+		<td>{{details.playcount}}</td> 
 		<th></th> 
 		<td></td>
 	</tr> 
 </table> 
 
 <h5>Cast</h5>
-<ul data-content="details.cast" data-format="CastFormatter"></ul>
+<ul>{{asCastList details.cast}}</ul>

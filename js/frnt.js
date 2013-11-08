@@ -27,6 +27,42 @@ Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	}
 	return moment().startOf('day').seconds(runtime).format("HH:mm:ss");
 });
+Handlebars.registerHelper('asGenreString', function(value) {
+	if (value == null) {
+		return "";
+	} else if (typeof value === "array") {
+		return value.join(", ");
+	} else if (typeof value === "object") {
+		var genres = "";
+		$.each(value, function(idx, element) {
+			genres += element;
+			if (value.length -1 > idx) {
+				genres += ", ";
+			}
+		});
+		return genres;
+    } else if (typeof value === "string") {
+    	return value.replace(/ /g, "").replace(/,/g, ", ")
+    }
+});
+Handlebars.registerHelper('asTrailerUrl', function(value) {
+    if (value == null) {
+    	return "No Trailer";
+	} else {
+		console.log("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
+		return new Handlebars.SafeString("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
+	}
+});
+Handlebars.registerHelper('asCastList', function(value) {
+    if (value == null) {
+    	return "";
+    }
+	var cast = "";
+	$.each(value, function(idx, element) {
+		cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
+	});
+	return new Handlebars.SafeString(cast);
+});
 
 $(document).ready(function() {
 	// General...
@@ -43,7 +79,6 @@ $(document).ready(function() {
 	setInterval("getState()", 1000);
 	
 	// Navigation functionality to make urls sexy and bookmarkable	
-	registerTemplateFormatters();
 	
 	navigationHandler();
 	$(window).bind("hashchange", navigationHandler);
@@ -131,10 +166,7 @@ var displayModalDetails = function(response) {
 	}
 	
 	$('#detailTitle').text(details.title);
-	
-	$("#detailContent").loadTemplate("templates/"+CURRENT_LIBRARY+"-details.html", {
-		details: details
-    });
+	$("#detailContent").render(CURRENT_LIBRARY+"-details", {details: details});
 
 	/*	var castList = $('<div class="row actors"></div>');
 	$.each(details.cast, function(idx, element) {
@@ -514,46 +546,4 @@ function setIsPlaying(isPlaying) {
 		icon.addClass('glyphicon-pause', true);
 		icon.removeClass('glyphicon-play', true);		
 	}
-}
-
-var registerTemplateFormatters = function() {
-	$.addTemplateFormatter({
-		// Genres aren' always formatted the same way it seems :/
-	    GenreFormatter : function(value, template) {
-            if (value == null) {
-            	return "";
-			} else if (typeof value === "array") {
-				return value.join(", ");
-            } else if (typeof value === "object") {
-            	var genres = "";
-				$.each(value, function(idx, element) {
-					genres += element;
-					if (value.length -1 > idx) {
-						genres += ", ";
-					}
-				});
-				return genres;
-            } else if (typeof value === "string") {
-            	return value.replace(/ /g, "").replace(/,/g, ", ")
-            }
-        },
-	    TrailerFormatter : function(value, template) {
-            if (value == null) {
-            	return "No Trailer";
-			} else {
-				return '<a href="http://youtu.be/'+value.substring(value.length-11)+'" target="_blank">Watch on Youtube</1>';
-			}
-        },
-		// TODO: Check if it's possible to use the "paged" methods from the template parser instead...
-	    CastFormatter : function(value, template) {
-            if (value == null) {
-            	return "";
-            }
-			var cast = "";
-			$.each(value, function(idx, element) {
-				cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
-			});
-			return cast;
-        }
-	});
 }
