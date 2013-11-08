@@ -219,3 +219,11 @@ background-color:#FFFFFF}
 .slider-selection {
 	background: #5cb85c;
 }
+.btn-group-square {
+	display: inline-block;
+}
+.btn-group-square .btn-group {
+	clear: both;
+	display: block;
+	margin-bottom: -5px;
+}

@@ -331,7 +331,7 @@ function getPlayingInfo(mediaType) {
 			}
 			
 			// Update text...
-			$('#nowplaying').text('Now Playing: ' + item.showtitle + " - " + item.label);
+			$('#nowplaying').html('<b>' + item.showtitle + " - " + item.label+'</b>');
 			
 			// Update Seekbar...
 			updateSeekBar();
