@@ -287,7 +287,7 @@ var showTVShowsLibrary = function() {
 			$.each(results, function(idx, element) {
 				var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="'+element.title+'"></div>');
 				var link = $('<a href="#!/tvshows/'+element.tvshowid+'" style="height: 280px" class="thumbnail"></a>');
-				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');
+				var image = $('<img style="height: 230px;" src="missing.png" data-src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');
 				var caption = $('<div class="caption"><b>'+element.title+'</b></div>');
 				
 				link.append(image);
@@ -295,6 +295,7 @@ var showTVShowsLibrary = function() {
 				thumb.append(link);
 				lib.append(thumb);
 			});
+			$("img").unveil();
 			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
 		},
 		error: function(response) {
