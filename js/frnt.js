@@ -303,11 +303,6 @@ var showTVShowsLibrary = function() {
 	});	
 }
 
-var newItemPlaying = function(itemId) {
-	// TODO: We don't need to update this every seconds.. Move it somewhere else later! 
-	$('#totaltime').text(formatTime(player.totaltime));
-}
-
 function getPlayingInfo(mediaType) {
 	// Get details
 	if (mediaType == "audio") {
@@ -441,7 +436,6 @@ function updateSeekBar() {
 					console.log(player.playlistid);
 					//var parts = Math.round(moment.duration(player.totaltime).asSeconds());
 
-
 					// Update volume
 					console.log(application.volume);
 					$('#volumebar').attr("aria-valuenow", application.volume);
@@ -451,6 +445,7 @@ function updateSeekBar() {
 			
 					// Set current time...
 					$('#time').text(formatTime(player.time));
+					$('#totaltime').text(formatTime(player.totaltime));
 				},
 				error: function(result) {
 					console.error(result);
