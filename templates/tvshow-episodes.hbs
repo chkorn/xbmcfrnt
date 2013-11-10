@@ -1,9 +1,9 @@
 <table class="table table-hover table-striped">
 	<tr>
-		<th>#</th>
+		<th style="width: 25px;">#</th>
 		<th>Title</th>
-		<th>Runtime</th>
-		<th></th>
+		<th style="width: 25px;">Runtime</th>
+		<th style="width: 150px;"></th>
 	</tr>
 	{{#each episodes}}
 	<tr>
@@ -14,7 +14,7 @@
 			<button type="button" class="btn btn-default btn-sm">
 				<span class="glyphicon glyphicon-play"></span>
 			</button>
-			<button type="button" class="btn btn-default btn-sm">
+			<button type="button" class="btn btn-default btn-sm add-to-playlist" data-idtype="{{this.episodeid}}" data-id="{{this.episodeid}}">
 				<span class="glyphicon glyphicon-list"></span>
 			</button>
 			<button type="button" class="btn btn-default btn-sm">

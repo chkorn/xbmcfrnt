@@ -49,7 +49,6 @@ Handlebars.registerHelper('asTrailerUrl', function(value) {
     if (value == null) {
     	return "No Trailer";
 	} else {
-		console.log("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
 		return new Handlebars.SafeString("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
 	}
 });
@@ -83,25 +82,20 @@ $(document).ready(function() {
 	navigationHandler();
 	$(window).bind("hashchange", navigationHandler);
 	$('#volumebar').slider({min: 0, max: 100, value: 50});
-	console.log("F");
 });
 
 var navigationHandler = function() {
 	// Note: It would be much cooler to use the History API but no idea how to achieve this without the ability to RedirectMatch...
 	var hash = window.location.hash;
-	console.log("navigationHandler");
 	if (!hash || hash == "" || hash == "#!/movies/") {
-		console.log("nav: movies");
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/movies/"]').parent().addClass("active");
         showLibrary("movies");
 	} else if (hash == "#!/tvshows/") {
-		console.log("nav: tvshows");
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
         showLibrary("tvshows");
 	} else if (hash.match(/^#!\/tvshows\//)) {
-		console.log("nav: tvshows->details");
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
 		showSeriesDetails(hash.substring(11));
@@ -131,6 +125,18 @@ var showSeriesDetails = function (seriesId) {
                         var tab = $('<div class="tab-pane' + (element.season == 1 ? ' active' : '') + '" id="season-' + element.season + '"></div>');
                         tab.render('tvshow-episodes', {episodes: episodes});
                         seasonList.append(tab);
+						tab.find('.add-to-playlist').click(function() {
+							console.log({"item":{"episodeid": $(this).data('id')}});
+							$.jsonRPC.request('Playlist.Add', {
+								params: { "playlistid": 1, "item": { "episodeid": parseInt($(this).data('id')) }},
+								success: function(response) {
+									console.log(response);
+								}, 
+								error: function(response) {
+									console.error(response);
+								}
+							});
+						});
                         tab.tab();
                         $('#loading').hide();
                     },
@@ -411,10 +417,8 @@ function speedUpdate(newSpeed) {
 		// Was playing, now paused
 		setIsPlaying(true);
 	} else if (newSpeed > 1) {
-		console.log("FASTER THAN ONE!");
 		setIsForwarding(true);
 	} else if (newSpeed < 1) {
-		console.log("SLOWER THAN ONE!");
 		setIsReversing(true);
 	}
 	SPEED = newSpeed;
@@ -434,11 +438,11 @@ function updateSeekBar() {
 					/*var pct = Math.round(player.percentage);
 					$('#seekbar').attr("aria-valuenow", pct);
 					$('#seekbar').css("width", pct+"%");*/
-					console.log(player.playlistid);
+					//console.log(player.playlistid);
 					//var parts = Math.round(moment.duration(player.totaltime).asSeconds());
 
 					// Update volume
-					console.log(application.volume);
+					//console.log(application.volume);
 					$('#volumebar').attr("aria-valuenow", application.volume);
 					$('#volumebar').css("width", application.volume+"%");
 			
