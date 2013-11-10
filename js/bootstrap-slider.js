@@ -18,7 +18,6 @@
  * ========================================================= */
  
 !function( $ ) {
-
 	var Slider = function(element, options) {
 		this.element = $(element);
 		this.picker = $('<div class="slider">'+
@@ -345,6 +344,18 @@
 					this.value[1] = this.min;
 				}
 			}
+			this.diff = this.max - this.min;
+			this.percentage = [
+				(this.value[0]-this.min)*100/this.diff,
+				(this.value[1]-this.min)*100/this.diff,
+				this.step*100/this.diff
+			];
+			this.layout();
+		},
+		
+		setMaxValue: function(val) {
+			this.max = val;
+			
 			this.diff = this.max - this.min;
 			this.percentage = [
 				(this.value[0]-this.min)*100/this.diff,

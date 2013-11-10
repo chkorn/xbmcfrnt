@@ -21,6 +21,7 @@ var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
 var CURRENT_ID = null;
 var LAST_VOLUME_CHANGE = null;
+var LAST_SEEK = null;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	if (runtime == 0) {
@@ -93,6 +94,25 @@ $(document).ready(function() {
 				params: {"volume":this.value},
 			 	success: function(response) {
 					LAST_VOLUME_CHANGE = new Date().getTime();
+					console.log(response);
+				},
+				error: function(response) {
+					console.error(response);
+				}
+			});
+		}
+	});
+	$('#seekbar').slider({min: 0, max: 100, value: 50, formater: function(value) {
+		return moment().startOf('day').seconds(value).format("HH:mm:ss");
+	}}).on('slideStop', function(event) {
+		// Note: We only really do send the seek-event when we stop dragging to avoid unpleasant behaviour (IMHO)
+		if (this.value) {
+			console.log(this.value);
+			var time = moment.duration(this.value, "seconds");
+			console.log({"playerid": 1, "value": {"hours":time.hours(), "minutes":time.minutes(), "seconds": time.seconds(), "milliseconds":0}});
+			$.jsonRPC.request('Player.Seek', {
+				params: {"playerid": 1, "value": {"hours":time.hours(), "minutes":time.minutes(), "seconds": time.seconds(), "milliseconds":0}}, // TODO: Make dynamic someday...
+			 	success: function(response) {
 					console.log(response);
 				},
 				error: function(response) {
@@ -467,13 +487,13 @@ function updateSeekBar() {
 					var player = response[0].result;
 					var application = response[1].result;
 					
-					// Update progressbar
-					/*var pct = Math.round(player.percentage);
-					$('#seekbar').attr("aria-valuenow", pct);
-					$('#seekbar').css("width", pct+"%");*/
-					//console.log(player.playlistid);
-					//var parts = Math.round(moment.duration(player.totaltime).asSeconds());
-
+					// Update Seekbar
+					// TODO: (for volume and seek) -> Lock jumping if currently seeking/adjusting
+					if (!LAST_SEEK || new Date().getTime() > LAST_SEEK + 2000) {
+						$('#seekbar').slider("setMaxValue", Math.ceil(moment.duration(player.totaltime).asSeconds()));
+						$('#seekbar').slider("setValue", Math.ceil(moment.duration(player.time).asSeconds()));
+					}
+					
 					// Update volume. But only after a few seconds have passed when the time was changed via this interface. 
 					// This avoids a "jumping" slider
 					if (!LAST_VOLUME_CHANGE || new Date().getTime() > LAST_VOLUME_CHANGE + (2000)) {
