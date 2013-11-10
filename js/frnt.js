@@ -84,7 +84,19 @@ $(document).ready(function() {
 	
 	navigationHandler();
 	$(window).bind("hashchange", navigationHandler);
-	$('#volumebar').slider({min: 0, max: 100, value: 50});
+	
+	// Volume
+	$('#volumebar').slider({min: 0, max: 100, value: 50}).on('slide', function(event) {
+		$.jsonRPC.request('Application.SetVolume', {
+			params: {"volume":this.value},
+		 	success: function(response) {
+				console.log(response);
+			},
+			error: function(response) {
+				console.error(response);
+			}
+		});
+	});
 	
 	// Modal for Playlist..
     $('#playlistModal').on('show.bs.modal', function (event) {
