@@ -22,6 +22,7 @@ var CURRENT_LIBRARY = null; // Remember the library type so that we don't have t
 var CURRENT_ID = null;
 var LAST_VOLUME_CHANGE = null;
 var LAST_SEEK = null;
+var MUTED = false;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	if (runtime == 0) {
@@ -487,6 +488,16 @@ function updateSeekBar() {
 					var player = response[0].result;
 					var application = response[1].result;
 					
+					if (MUTED != application.muted) {
+						var icon = $('#control-mute').children("span.glyphicon").first();
+						if (MUTED) {
+							icon.addClass("glyphicon-volume-off").removeClass("glyphicon-volume-up");
+						} else {
+							icon.addClass("glyphicon-volume-up").removeClass("glyphicon-volume-off");
+						}
+					}
+					MUTED = application.muted;
+					
 					// Update Seekbar
 					// TODO: (for volume and seek) -> Lock jumping if currently seeking/adjusting
 					if (!LAST_SEEK || new Date().getTime() > LAST_SEEK + 2000) {
@@ -644,6 +655,19 @@ function bindControls() {
 				},
 				error: function(response) {
 				
+				}
+			});
+		}
+	});
+	$('#control-mute').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Application.SetMute', {
+				params: {"mute":!MUTED},
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+					console.error(response);
 				}
 			});
 		}
