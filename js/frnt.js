@@ -27,6 +27,9 @@ Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	}
 	return moment().startOf('day').seconds(runtime).format("HH:mm:ss");
 });
+Handlebars.registerHelper('asTypeString', function(typeString) {
+	return typeString.charAt(0).toUpperCase() + typeString.slice(1);
+});
 Handlebars.registerHelper('asGenreString', function(value) {
 	if (value == null) {
 		return "";
@@ -82,6 +85,20 @@ $(document).ready(function() {
 	navigationHandler();
 	$(window).bind("hashchange", navigationHandler);
 	$('#volumebar').slider({min: 0, max: 100, value: 50});
+	
+	// Modal for Playlist..
+    $('#playlistModal').on('show.bs.modal', function (event) {
+		$.jsonRPC.request('Playlist.GetItems', {
+			params: {"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode"]}, // TODO: Make dynamic someday...
+		 	success: function(response) {
+				$('#playlistContent').render('playlist', {items: response.result.items});
+				console.log(response.result.items);
+			},
+			error: function(response) {
+				console.error(response);
+			}
+		});
+    });
 });
 
 var navigationHandler = function() {

@@ -5,11 +5,14 @@
 		<th style="width: 25px;">Runtime</th>
 		<th style="width: 150px;"></th>
 	</tr>
-	{{#each episodes}}
+	{{#each items}}
 	<tr>
-		<td>{{this.episode}}</td>
+		<td>{{@index}}</td>
+		{{#if this.episode}}
+		<td>{{this.showtitle}} - {{this.title}} (Season {{this.seasonid}}, Episode {{this.episode}})</td>
+		{{else}}
 		<td>{{this.title}}</td>
-		<td>{{this.type}}</td>
+		{{/if}}
 		<td>{{inHoursMinutesSeconds this.runtime}}</td>
 		<td>
 			<button type="button" class="btn btn-default btn-sm">

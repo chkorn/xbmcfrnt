@@ -51,6 +51,7 @@
 			</div>
 			<div id="library">
 			</div>
+			<!-- TODO: FIX ARIA STUFF!!! -->
 			<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="Details for selected media" aria-hidden="true">
 			  <div class="modal-dialog">
 			    <div class="modal-content">
@@ -63,6 +64,20 @@
 			        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 			        <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-list"></span> Queue</button>
 			        <button type="button" class="btn btn-success"><span class="glyphicon glyphicon-play"></span> Play</button>
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+			</div><!-- /.modal -->
+			<div class="modal fade" id="playlistModal" tabindex="-1" role="dialog" aria-labelledby="Your playlist" aria-hidden="true">
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			        <h4 class="modal-title" id="playlistTitle">Playlist</h4>
+			      </div>
+			      <div class="modal-body" id="playlistContent"></div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 			      </div>
 			    </div><!-- /.modal-content -->
 			  </div><!-- /.modal-dialog -->
@@ -148,7 +163,7 @@
 								<button type="button" class="btn btn-default" id="control-down">
 								  <span class="glyphicon glyphicon-arrow-down"></span>
 								</button>
-								<button type="button" class="btn btn-default" id="control-playlist">
+								<button type="button" class="btn btn-default" id="control-playlist" data-toggle="modal" data-target="#playlistModal">
 								  <span class="glyphicon glyphicon-list"></span> 
 								</button>
 							</div>
