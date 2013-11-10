@@ -20,6 +20,7 @@ var PLAYER = null;
 var SPEED = null;
 var CURRENT_LIBRARY = null; // Remember the library type so that we don't have to pass it through everywhere for the time being
 var CURRENT_ID = null;
+var LAST_VOLUME_CHANGE = null;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
 	if (runtime == 0) {
@@ -87,15 +88,19 @@ $(document).ready(function() {
 	
 	// Volume
 	$('#volumebar').slider({min: 0, max: 100, value: 50}).on('slide', function(event) {
-		$.jsonRPC.request('Application.SetVolume', {
-			params: {"volume":this.value},
-		 	success: function(response) {
-				console.log(response);
-			},
-			error: function(response) {
-				console.error(response);
-			}
-		});
+		if (this.value) {
+			console.log("Setting Volume to: "+this.value)
+			$.jsonRPC.request('Application.SetVolume', {
+				params: {"volume":this.value},
+			 	success: function(response) {
+					LAST_VOLUME_CHANGE = new Date().getTime();
+					console.log(response);
+				},
+				error: function(response) {
+					console.error(response);
+				}
+			});
+		}
 	});
 	
 	// Modal for Playlist..
@@ -470,10 +475,12 @@ function updateSeekBar() {
 					//console.log(player.playlistid);
 					//var parts = Math.round(moment.duration(player.totaltime).asSeconds());
 
-					// Update volume
-					//console.log(application.volume);
-					$('#volumebar').attr("aria-valuenow", application.volume);
-					$('#volumebar').css("width", application.volume+"%");
+					// Update volume. But only after a few seconds have passed when the time was changed via this interface. 
+					// This avoids a "jumping" slider
+					if (!LAST_VOLUME_CHANGE || new Date().getTime() > LAST_VOLUME_CHANGE + (2000)) {
+						console.log("VOL TIME");
+						$("#volumebar").slider("setValue", application.volume);
+					}
 			
 					speedUpdate(player.speed);
 			
