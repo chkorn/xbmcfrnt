@@ -222,7 +222,7 @@ var showMovieLibrary = function () {
             $.each(results, function (idx, element) {
                 var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="' + CURRENT_LIBRARY + '" data-itemid="' + element[itemId] + '" class="col-sm-3 col-md-2 media-item" title="' + element.title + '"></div>');
                 var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
-                var image = $('<img style="height: 230px;" src="/vfs/' + encodeURIComponent(element.thumbnail) + '" alt="' + element.title + ' Thumbnail">');
+                var image = $('<img style="height: 230px;" data-src="/vfs/'+encodeURIComponent(element.thumbnail)+'" src="missing.png" alt="' + element.title + ' Thumbnail">');
                 var caption = $('<div class="caption"><b>' + element.title + '</b></div>');
 
                 link.append(image);
@@ -230,6 +230,7 @@ var showMovieLibrary = function () {
                 thumb.append(link);
                 lib.append(thumb);
             });
+			$("img").unveil();
             //TODO: $(".media-item").popover({html: true, trigger: "hover"});
 
             // Load additional data when modal is opened...
@@ -248,8 +249,6 @@ var showMovieLibrary = function () {
                 } else {
                     console.error(CURRENT_LIBRARY + " is not yet implemented!");
                 }
-                console.log(method);
-                console.log(params);
                 $.jsonRPC.request(method, {
                     params: params,
                     success: displayModalDetails,
@@ -286,7 +285,6 @@ var showTVShowsLibrary = function() {
 			lib.append(rows);
 			
 			$.each(results, function(idx, element) {
-				console.log(element);
 				var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="'+element.title+'"></div>');
 				var link = $('<a href="#!/tvshows/'+element.tvshowid+'" style="height: 280px" class="thumbnail"></a>');
 				var image = $('<img style="height: 230px;" src="/vfs/'+encodeURIComponent(element.thumbnail)+'" alt="'+element.title+' Thumbnail">');

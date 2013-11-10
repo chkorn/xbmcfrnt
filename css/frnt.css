@@ -227,3 +227,17 @@ background-color:#FFFFFF}
 	display: block;
 	margin-bottom: -5px;
 }
+.btn-group-square > .btn-group:not(:last-child):not(:first-child) > .btn {
+	border-radius: 0;
+}
+.btn-group-square > .btn-group:first-child > .btn {
+	border-bottom-right-radius: 0px;
+	border-bottom-left-radius: 0px;
+}
+.btn-group-square > .btn-group:last-child > .btn {
+	border-top-right-radius: 0px;
+	border-top-left-radius: 0px;
+}
+.btn-group-square .btn {
+	margin-top: -1px;
+}
