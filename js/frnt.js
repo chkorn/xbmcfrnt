@@ -89,7 +89,6 @@ $(document).ready(function() {
 	// Volume
 	$('#volumebar').slider({min: 0, max: 100, value: 50}).on('slide', function(event) {
 		if (this.value) {
-			console.log("Setting Volume to: "+this.value)
 			$.jsonRPC.request('Application.SetVolume', {
 				params: {"volume":this.value},
 			 	success: function(response) {
@@ -478,7 +477,6 @@ function updateSeekBar() {
 					// Update volume. But only after a few seconds have passed when the time was changed via this interface. 
 					// This avoids a "jumping" slider
 					if (!LAST_VOLUME_CHANGE || new Date().getTime() > LAST_VOLUME_CHANGE + (2000)) {
-						console.log("VOL TIME");
 						$("#volumebar").slider("setValue", application.volume);
 					}
 			
