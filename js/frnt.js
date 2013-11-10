@@ -510,6 +510,90 @@ function bindControls() {
 			});
 		}
 	});
+	$('#control-up').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Up', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-down').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Down', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-left').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Left', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-right').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Right', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-select').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Select', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-home').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Home', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
+	$('#control-info').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.ShowOSD', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
 }
 
 function formatTime(parts) {
