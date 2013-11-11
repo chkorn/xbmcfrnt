@@ -140,7 +140,7 @@ $(document).ready(function() {
 				capabilities.prepend('<li><a href="#!/shutdown/"><b class="glyphicon glyphicon-off"></b> Shutdown</a></li>');
 			}
 			if (response.result.canreboot) {
-				capabilities.prepend('<li><a href="#!/reboot/"><b class="glyphicon glyphicon-refresh"></b>Reboot</a></li>');
+				capabilities.prepend('<li><a href="#!/reboot/"><b class="glyphicon glyphicon-refresh"></b> Reboot</a></li>');
 			}
 			if (response.result.canhibernate) {
 				capabilities.prepend('<li><a href="#!/hibernate/">Hibernate</a></li>');
