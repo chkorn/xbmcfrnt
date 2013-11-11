@@ -14,14 +14,14 @@
 		<td>{{this.title}}</td>
 		{{/if}}
 		<td>{{inHoursMinutesSeconds this.runtime}}</td>
-		<td>
-			<button type="button" class="btn btn-default btn-sm">
+		<td data-position="{{@index}}"> <!-- TODO: episodeid dynamic... -->
+			<button type="button" class="btn btn-default btn-sm play">
 				<span class="glyphicon glyphicon-play"></span>
 			</button>
-			<button type="button" class="btn btn-default btn-sm">
+			<button type="button" class="btn btn-default btn-sm info">
 				<span class="glyphicon glyphicon-info-sign"></span>
 			</button>
-			<button type="button" class="btn btn-default btn-sm">
+			<button type="button" class="btn btn-default btn-sm remove">
 				<span class="glyphicon glyphicon-remove"></span>
 			</button>
 		</td>

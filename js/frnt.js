@@ -53,16 +53,16 @@ Handlebars.registerHelper('asGenreString', function(value) {
     }
 });
 Handlebars.registerHelper('asTrailerUrl', function(value) {
-    if (value == null) {
-    	return "No Trailer";
+	if (value == null) {
+		return "No Trailer";
 	} else {
 		return new Handlebars.SafeString("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
 	}
 });
 Handlebars.registerHelper('asCastList', function(value) {
-    if (value == null) {
-    	return "";
-    }
+	if (value == null) {
+		return "";
+	}
 	var cast = "";
 	$.each(value, function(idx, element) {
 		cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
@@ -70,12 +70,11 @@ Handlebars.registerHelper('asCastList', function(value) {
 	return new Handlebars.SafeString(cast);
 });
 Handlebars.registerHelper('playedStatus', function(value) {
-	console.log(value);
-    if (value == null || value == 0) {
-    	return "";
-    } else {
-    	return new Handlebars.SafeString('<b title="'+value+' plays" class="glyphicon glyphicon-ok-circle"></b> ');
-    }
+	if (value == null || value == 0) {
+		return "";
+	} else {
+		return new Handlebars.SafeString('<b title="'+value+' plays" class="glyphicon glyphicon-ok-circle"></b> ');
+	}
 });
 
 $(document).ready(function() {
@@ -135,9 +134,38 @@ $(document).ready(function() {
 	// Modal for Playlist..
     $('#playlistModal').on('show.bs.modal', function (event) {
 		$.jsonRPC.request('Playlist.GetItems', {
-			params: {"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode"]}, // TODO: Make dynamic someday...
+			params: {"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode", "file"]}, // TODO: Make dynamic someday...
 		 	success: function(response) {
-				$('#playlistContent').render('playlist', {items: response.result.items});
+				var playlistContent = $('#playlistContent');
+				playlistContent.render('playlist', {items: response.result.items}, function(content) {
+					playlistContent.find(".play").click(function() {
+						console.log({"item":{"file": parseInt($(this).parent().data('position'))}});
+						$.jsonRPC.request('Player.Open', {
+							params: { "item": { "playlistid": 1, "position": parseInt($(this).parent().data('position'))}},
+							success: function(response) {
+								console.log(response);
+							}, 
+							error: function(response) {
+								console.error(response);
+							}
+						});
+					});
+					playlistContent.find(".remove").click(function() {
+						console.log({"playlistid": 1, "position": parseInt($(this).parent().data('position'))});
+						$.jsonRPC.request('Playlist.Remove', {
+							params: { "playlistid": 1, "position": parseInt($(this).parent().data('position'))},
+							success: function(response) {
+								console.log(response);
+							}, 
+							error: function(response) {
+								console.error(response);
+							}
+						});
+					});
+					playlistContent.find(".info").click(function() {
+						console.log("NYI");
+					});
+				});
 				console.log(response.result.items);
 			},
 			error: function(response) {
