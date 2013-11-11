@@ -1,3 +1,4 @@
+
 (function($) {
     $.fn.uniformHeight = function() {
         var maxHeight   = 0,
@@ -67,6 +68,14 @@ Handlebars.registerHelper('asCastList', function(value) {
 		cast += "<li><b>"+element.name+"</b> as "+element.role+"</li>";
 	});
 	return new Handlebars.SafeString(cast);
+});
+Handlebars.registerHelper('playedStatus', function(value) {
+	console.log(value);
+    if (value == null || value == 0) {
+    	return "";
+    } else {
+    	return new Handlebars.SafeString('<b title="'+value+'" class="glyphicon glyphicon-ok-circle"></b> ');
+    }
 });
 
 $(document).ready(function() {
@@ -173,16 +182,16 @@ var showSeriesDetails = function (seriesId) {
             $.each(seasons, function (idx, element) {
                 nav.append($('<li' + (element.season == 1 ? ' class="active" ' : '') + ' ><a data-toggle="tab" href="#season-' + element.season + '">Season ' + element.season + '</a></li>'));
                 $.jsonRPC.request('VideoLibrary.GetEpisodes', {
-                    params: { "tvshowid": parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail"]},
+                    params: { "tvshowid": parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail", "playcount"]},
                     success: function (response) {
                         var episodes = response.result.episodes;
                         var tab = $('<div class="tab-pane' + (element.season == 1 ? ' active' : '') + '" id="season-' + element.season + '"></div>');
                         tab.render('tvshow-episodes', {episodes: episodes});
                         seasonList.append(tab);
 						tab.find('.add-to-playlist').click(function() {
-							console.log({"item":{"episodeid": $(this).data('id')}});
+							console.log({"item":{"episodeid": $(this).parent().data('id')}});
 							$.jsonRPC.request('Playlist.Add', {
-								params: { "playlistid": 1, "item": { "episodeid": parseInt($(this).data('id')) }},
+								params: { "playlistid": 1, "item": { "episodeid": parseInt($(this).parent().data('id')) }},
 								success: function(response) {
 									console.log(response);
 								}, 
@@ -191,7 +200,19 @@ var showSeriesDetails = function (seriesId) {
 								}
 							});
 						});
-                        tab.tab();
+						tab.find(".play").click(function() {
+							console.log({"item":{"episodeid": $(this).parent().data('id')}});
+							$.jsonRPC.request('Player.Open', {
+								params: { "item": { "episodeid": parseInt($(this).parent().data('id')) }},
+								success: function(response) {
+									console.log(response);
+								}, 
+								error: function(response) {
+									console.error(response);
+								}
+							});
+						});
+                        tab.tab(); // TODO: Needed?
                         $('#loading').hide();
                     },
                     error: function (response) {
@@ -326,7 +347,7 @@ var showMovieLibrary = function () {
 
 var showTVShowsLibrary = function() {
 	$.jsonRPC.request("VideoLibrary.GetTVShows", {
-		params: { "properties": ["title", "fanart", "thumbnail", "plot"]},
+		params: { "properties": ["title", "fanart", "thumbnail", "plot", "playcount"]},
 	 	success: function(response) {
 			$('#loading').hide();
 			var results = response.result.tvshows;

@@ -8,13 +8,13 @@
 	{{#each episodes}}
 	<tr>
 		<td>{{this.episode}}</td>
-		<td>{{this.title}}</td>
+		<td>{{playedStatus this.playcount}}{{this.title}}</td>
 		<td>{{inHoursMinutesSeconds this.runtime}}</td>
-		<td>
-			<button type="button" class="btn btn-default btn-sm">
+		<td data-idtype="episodeid" data-id="{{this.episodeid}}">
+			<button type="button" class="btn btn-default btn-sm play">
 				<span class="glyphicon glyphicon-play"></span>
 			</button>
-			<button type="button" class="btn btn-default btn-sm add-to-playlist" data-idtype="{{this.episodeid}}" data-id="{{this.episodeid}}">
+			<button type="button" class="btn btn-default btn-sm add-to-playlist">
 				<span class="glyphicon glyphicon-list"></span>
 			</button>
 			<button type="button" class="btn btn-default btn-sm">
