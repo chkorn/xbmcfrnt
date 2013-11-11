@@ -241,3 +241,6 @@ background-color:#FFFFFF}
 .btn-group-square .btn {
 	margin-top: -1px;
 }
+.control.well {
+	margin-top: 5px;
+}

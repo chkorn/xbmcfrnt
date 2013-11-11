@@ -385,7 +385,12 @@ function getPlayingInfo(mediaType) {
 			}
 			
 			// Update text...
-			$('#nowplaying').html('<b>' + item.showtitle + " - " + item.label+'</b>');
+			// TODO: Checkme?!
+			if (item.showtitle) {
+				$('#nowplaying').html('<b>' + item.showtitle + " - " + item.label+'</b>');
+			} else {
+				$('#nowplaying').html("Nothing playing");
+			}
 			
 			// Update Seekbar...
 			updateSeekBar();
