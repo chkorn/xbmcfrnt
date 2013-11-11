@@ -74,7 +74,7 @@ Handlebars.registerHelper('playedStatus', function(value) {
     if (value == null || value == 0) {
     	return "";
     } else {
-    	return new Handlebars.SafeString('<b title="'+value+'" class="glyphicon glyphicon-ok-circle"></b> ');
+    	return new Handlebars.SafeString('<b title="'+value+' plays" class="glyphicon glyphicon-ok-circle"></b> ');
     }
 });
 

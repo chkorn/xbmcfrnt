@@ -9,7 +9,7 @@
 	<tr>
 		<td>{{@index}}</td>
 		{{#if this.episode}}
-		<td>{{this.showtitle}} - {{this.title}} (Season {{this.seasonid}}, Episode {{this.episode}})</td>
+		<td>{{this.showtitle}} - {{this.title}} (Season {{this.season}}, Episode {{this.episode}})</td>
 		{{else}}
 		<td>{{this.title}}</td>
 		{{/if}}
@@ -17,9 +17,6 @@
 		<td>
 			<button type="button" class="btn btn-default btn-sm">
 				<span class="glyphicon glyphicon-play"></span>
-			</button>
-			<button type="button" class="btn btn-default btn-sm add-to-playlist" data-idtype="{{this.episodeid}}" data-id="{{this.episodeid}}">
-				<span class="glyphicon glyphicon-list"></span>
 			</button>
 			<button type="button" class="btn btn-default btn-sm">
 				<span class="glyphicon glyphicon-info-sign"></span>
