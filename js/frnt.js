@@ -131,6 +131,30 @@ $(document).ready(function() {
 		}
 	});
 	
+	// Device capabilities for Application Menu, etc. 
+	$.jsonRPC.request('System.GetProperties', {
+		params: {"properties": ["canshutdown", "canhibernate", "cansuspend", "canreboot"]},
+	 	success: function(response) {
+			var capabilities = $('#device-capabilities');
+			if (response.result.canshutdown) {
+				capabilities.prepend('<li><a href="#!/shutdown/"><b class="glyphicon glyphicon-off"></b> Shutdown</a></li>');
+			}
+			if (response.result.canreboot) {
+				capabilities.prepend('<li><a href="#!/reboot/"><b class="glyphicon glyphicon-refresh"></b>Reboot</a></li>');
+			}
+			if (response.result.canhibernate) {
+				capabilities.prepend('<li><a href="#!/hibernate/">Hibernate</a></li>');
+			}
+			if (response.result.cansuspend) {
+				capabilities.prepend('<li><a href="#!/suspend/">Suspend</a></li>');
+			}
+			// TODO: Eject...? 
+		},
+		error: function(response) {
+			console.error(response);
+		}
+	});
+	
 	// Modal for Playlist..
     $('#playlistModal').on('show.bs.modal', function (event) {
 		$.jsonRPC.request('Playlist.GetItems', {
@@ -190,6 +214,42 @@ var navigationHandler = function() {
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
 		showSeriesDetails(hash.substring(11));
+	} else if (hash =="#!/shutdown/") {
+		$.jsonRPC.request('System.Shutdown', {
+			success: function(response) {
+				console.log(response);
+			}, 
+			error: function(response) {
+				console.error(response);
+			}
+		});
+	} else if (hash =="#!/restart/") {
+		$.jsonRPC.request('System.Restart', {
+			success: function(response) {
+				console.log(response);
+			}, 
+			error: function(response) {
+				console.error(response);
+			}
+		});
+	} else if (hash =="#!/hibernate/") {
+		$.jsonRPC.request('System.Hibernate', {
+			success: function(response) {
+				console.log(response);
+			}, 
+			error: function(response) {
+				console.error(response);
+			}
+		});
+	} else if (hash =="#!/suspend/") {
+		$.jsonRPC.request('System.Suspend', {
+			success: function(response) {
+				console.log(response);
+			}, 
+			error: function(response) {
+				console.error(response);
+			}
+		});
 	}
 };
 
