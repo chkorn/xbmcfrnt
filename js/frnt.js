@@ -496,6 +496,11 @@ function getPlayingInfo(mediaType) {
 		params: parms,
 	 	success: function(response) {
 			var item = response.result.item;
+			
+			if (item == null) {
+				$('#nowplaying').html("Nothing playing");
+			}
+			
 			if (item.id != CURRENT_ID) {
 				CURRENT_ID = item.id;
 			}
@@ -504,8 +509,12 @@ function getPlayingInfo(mediaType) {
 			// TODO: Checkme?!
 			if (item.showtitle) {
 				$('#nowplaying').html('<b>' + item.showtitle + " - " + item.label+'</b>');
+			} else if (item.title) {
+				$('#nowplaying').html('<b>' + item.title + '</b>');
+			} else if (item.label) {
+				$('#nowplaying').html('<b>' + item.label + '</b>');
 			} else {
-				$('#nowplaying').html("Nothing playing");
+				console.error(item);
 			}
 			
 			// Update Seekbar...
