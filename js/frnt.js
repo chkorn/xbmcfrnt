@@ -16,6 +16,8 @@ $.jsonRPC.setup({
   //namespace: ''
 });
 
+var VERSION = "0.0.1";
+
 // Global stuff we don't want to query/pass-through all the time...
 var PLAYER = null;
 var SPEED = null;
@@ -26,7 +28,7 @@ var LAST_SEEK = null;
 var MUTED = false;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
-	if (runtime == 0) {
+	if (runtime == 0 || runtime == "0") {
 		return "--:--:--";
 	}
 	return moment().startOf('day').seconds(runtime).format("HH:mm:ss");
@@ -161,9 +163,9 @@ $(document).ready(function() {
 			params: {"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode", "file"]}, // TODO: Make dynamic someday...
 		 	success: function(response) {
 				var playlistContent = $('#playlistContent');
-				playlistContent.render('playlist', {items: response.result.items}, function(content) {
+				console.log(response);
+				playlistContent.render('playlist', {items: response.result.items}).on('render.handlebars', function(content) {
 					playlistContent.find(".play").click(function() {
-						console.log({"item":{"file": parseInt($(this).parent().data('position'))}});
 						$.jsonRPC.request('Player.Open', {
 							params: { "item": { "playlistid": 1, "position": parseInt($(this).parent().data('position'))}},
 							success: function(response) {
@@ -249,6 +251,11 @@ var navigationHandler = function() {
 			error: function(response) {
 				console.error(response);
 			}
+		});
+	} else if (hash == "#!/settings/") {
+		libraryRefresh();
+		$('#library').render('settings', {VERSION: VERSION}).on('render.handlebars', function() {
+			$('#loading').hide();
 		});
 	}
 };

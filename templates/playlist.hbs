@@ -8,10 +8,14 @@
 	{{#each items}}
 	<tr>
 		<td>{{@index}}</td>
-		{{#if this.episode}}
+		{{#if this.showtitle}}
 		<td>{{this.showtitle}} - {{this.title}} (Season {{this.season}}, Episode {{this.episode}})</td>
 		{{else}}
+		{{#if this.title}}
 		<td>{{this.title}}</td>
+		{{else}}
+		<td>{{this.label}}</td>
+		{{/if}}
 		{{/if}}
 		<td>{{inHoursMinutesSeconds this.runtime}}</td>
 		<td data-position="{{@index}}"> <!-- TODO: episodeid dynamic... -->
