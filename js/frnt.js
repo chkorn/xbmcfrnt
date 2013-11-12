@@ -696,6 +696,18 @@ function bindControls() {
 			});
 		}
 	});
+	$('#control-back').click(function() {
+		if(!$(this).hasClass("disabled")) {
+			$.jsonRPC.request('Input.Back', {
+			 	success: function(response) {
+					console.log(response);
+				},
+				error: function(response) {
+				
+				}
+			});
+		}
+	});
 	$('#control-up').click(function() {
 		if(!$(this).hasClass("disabled")) {
 			$.jsonRPC.request('Input.Up', {
