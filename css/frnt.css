@@ -175,15 +175,13 @@ background-color:#FFFFFF}
 
 }
 /* Player Stuff... */
-.btn-group-player,
-.btn-group-player button, 
-.btn-group-player div {
+.btn-group-player {
 	border: 0;
-
 }
 .btn-group-player .progress {
 	margin-top: 10px;
 	margin-left: 5px;
+	margin-right: 5px;
 	background: #fff;
 }
 .btn-group-player .btn-group-container {
@@ -192,15 +190,17 @@ background-color:#FFFFFF}
 	height: 32px;
 	padding: 0px 5px;
 }
-.group-element {
+.btn-group-player > .group-element {
 	display: inline-block;
 	background: #fff;
-	height: 32px;
+	height: 34px;
 	padding: 0px 5px;
 	float: left;
+	border-bottom: 1px solid #ccc;
+	border-top: 1px solid #ccc;
 }
-.time-info {
-	padding-top: 5px;
+.btn-group-player .time-info {
+	padding-top: 6px;
 }
 .group-element > .progress, 
 .group-element > .slider {
@@ -214,7 +214,10 @@ background-color:#FFFFFF}
 	border-bottom-right-radius: 4px;
 }
 #volumebar {
-	width: 140px;
+	width: 135px;
+}
+#seekbar {
+	width: 290px;
 }
 .slider-selection {
 	background: #5cb85c;

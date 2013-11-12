@@ -81,7 +81,7 @@ Handlebars.registerHelper('playedStatus', function(value) {
 
 $(document).ready(function() {
 	// General...
-	$("#controls").find(".btn").tooltip();
+	$("#controls").find(".btn").tooltip({container: 'body'});
 	setActiveControls(false);
 	bindControls();
 	
