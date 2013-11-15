@@ -249,4 +249,6 @@ background-color:#FFFFFF}
 	background: #eee;
 	margin-top: 7px;
 	padding: 5px 10px;
+	height: 100px;
+	border: 1px solid #ccc;
 }
