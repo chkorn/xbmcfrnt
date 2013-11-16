@@ -1,4 +1,3 @@
-
 (function($) {
 	$.fn.uniformHeight = function() {
 		var maxHeight	= 0,
@@ -8,12 +7,11 @@
 			console.log($(this).height());
 			maxHeight = max(maxHeight, $(this).height());
 		}).height(maxHeight);
-	}
+	};
 })(jQuery);
 
 $.jsonRPC.setup({
   endPoint: '/jsonrpc'
-  //namespace: ''
 });
 
 var VERSION = "0.0.1";
@@ -28,7 +26,7 @@ var LAST_SEEK = null;
 var MUTED = false;
 
 Handlebars.registerHelper('inHoursMinutesSeconds', function(runtime) {
-	if (runtime == 0 || runtime == "0") {
+	if (runtime === 0 || runtime == "0") {
 		return "--:--:--";
 	}
 	return moment().startOf('day').seconds(runtime).format("HH:mm:ss");
@@ -37,10 +35,8 @@ Handlebars.registerHelper('asTypeString', function(typeString) {
 	return typeString.charAt(0).toUpperCase() + typeString.slice(1);
 });
 Handlebars.registerHelper('asGenreString', function(value) {
-	if (value == null) {
+	if (value === null) {
 		return "";
-	} else if (typeof value === "array") {
-		return value.join(", ");
 	} else if (typeof value === "object") {
 		var genres = "";
 		$.each(value, function(idx, element) {
@@ -51,18 +47,18 @@ Handlebars.registerHelper('asGenreString', function(value) {
 		});
 		return genres;
 	} else if (typeof value === "string") {
-		return value.replace(/ /g, "").replace(/,/g, ", ")
+		return value.replace(/ /g, "").replace(/,/g, ", ");
 	}
 });
 Handlebars.registerHelper('asTrailerUrl', function(value) {
-	if (value == null) {
+	if (value === null) {
 		return "No Trailer";
 	} else {
 		return new Handlebars.SafeString("<a href=\"http://youtu.be/"+value.substring(value.length-11)+"\" target=\"_blank\">Watch on Youtube</a>");
 	}
 });
 Handlebars.registerHelper('asCastList', function(value) {
-	if (value == null) {
+	if (value === null) {
 		return "";
 	}
 	var cast = "";
@@ -72,7 +68,7 @@ Handlebars.registerHelper('asCastList', function(value) {
 	return new Handlebars.SafeString(cast);
 });
 Handlebars.registerHelper('playedStatus', function(value) {
-	if (value == null || value == 0) {
+	if (value === null || value === 0) {
 		return "";
 	} else {
 		return new Handlebars.SafeString('<b title="'+value+' plays" class="glyphicon glyphicon-ok-circle"></b> ');
@@ -91,7 +87,7 @@ $(document).ready(function() {
 	});
 	
 	// Refresh player every X seconds to make sure we display the correct values...
-	setInterval("getState()", 1000);
+	setInterval(getState, 1000);
 	
 	// Navigation functionality to make urls sexy and bookmarkable	
 	
@@ -204,7 +200,7 @@ $(document).ready(function() {
 var navigationHandler = function() {
 	// Note: It would be much cooler to use the History API but no idea how to achieve this without the ability to RedirectMatch...
 	var hash = window.location.hash;
-	if (!hash || hash == "" || hash == "#!/movies/") {
+	if (!hash || hash === "" || hash == "#!/movies/") {
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/movies/"]').parent().addClass("active");
 		showLibrary("movies");
@@ -279,7 +275,7 @@ var showSeriesDetails = function (seriesId) {
 			var nav = $('<ul class="nav nav-tabs" id="seasonTabs"></ul>');
 			library.append(nav);
 
-			var seasonList = $("<div class='tab-content'></div>")
+			var seasonList = $("<div class='tab-content'></div>");
 			library.append(seasonList);
 
 			$.each(seasons, function (idx, element) {
@@ -339,12 +335,13 @@ var libraryRefresh = function() {
 };
 
 var displayModalDetails = function(response) {
+	var details, itemId = null;
 	if (CURRENT_LIBRARY == "movies") {
-		var details = response.result.moviedetails; 
-		var itemId = "movieid";
+		details = response.result.moviedetails; 
+		itemId = "movieid";
 	} else if (CURRENT_LIBRARY == "tvshows") {
-		var details = response.result.tvshowdetails;
-		var itemId = "tvshowid";
+		details = response.result.tvshowdetails;
+		itemId = "tvshowid";
 	} else {
 		console.error(CURRENT_LIBRARY + " is not yet implemented!");
 	}
@@ -362,7 +359,7 @@ var displayModalDetails = function(response) {
 
 var showLibrary = function(type) {
 	console.log("Loading library: '"+type+"'");
-	libraryRefresh()
+	libraryRefresh();
 	CURRENT_LIBRARY = type;
 	
 	if (CURRENT_LIBRARY == "movies") {
@@ -375,12 +372,13 @@ var showLibrary = function(type) {
 };
 
 var browseDirectory = function(path) {
+	var method, params;
 	if (!path) {
-		var method = "Files.GetSources";
-		var params = {"media": "video"};
+		method = "Files.GetSources";
+		params = {"media": "video"};
 	} else {
-		var method = "Files.GetDirectory";
-		var params = {"directory": path, "media":"video"};
+		method = "Files.GetDirectory";
+		params = {"directory": path, "media":"video"};
 	}
 	
 	$.jsonRPC.request(method, {
@@ -388,13 +386,13 @@ var browseDirectory = function(path) {
 		success: function (response) {
 			$('#loading').hide();
 			
+			var results = null;
 			if (!path) {
-				var results = response.result.sources;
+				results = response.result.sources;
 			} else {
-				var results = response.result.files;
+				results = response.result.files;
 			}
-			console.log(results);
-			if (results.length == 0) {
+			if (results.length === 0) {
 				$('#library').text("No content yet!");
 				return;
 			}
@@ -420,7 +418,7 @@ var browseDirectory = function(path) {
 			console.error(response);
 		}
 	});
-}
+};
 
 var showMovieLibrary = function() {
 	var method = "VideoLibrary.GetMovies";
@@ -431,19 +429,19 @@ var showMovieLibrary = function() {
 		success: function (response) {
 			$('#loading').hide();
 
-			var results = null;
+			var results, itemId, name;
 			if (CURRENT_LIBRARY == "movies") {
 				results = response.result.movies;
-				var itemId = "movieid";
-				var name = "Movies";
+				itemId = "movieid";
+				name = "Movies";
 			} else if (CURRENT_LIBRARY == "tvshows") {
 				results = response.result.tvshows;
-				var itemId = "tvshowid";
-				var name = "TV Shows";
+				itemId = "tvshowid";
+				name = "TV Shows";
 			} else {
 				console.error(CURRENT_LIBRARY + " is not yet implemented!");
 			}
-			if (results.length == 0) {
+			if (results.length === 0) {
 				$('#library').text("No content yet!");
 				return;
 			}
@@ -507,7 +505,7 @@ var showTVShowsLibrary = function() {
 			var itemId = "tvshowid";
 			var name = "TV Shows";
 
-			if (results.length == 0) {
+			if (results.length === 0) {
 				$('#library').text("No content yet!");
 				return;
 			} 
@@ -536,26 +534,27 @@ var showTVShowsLibrary = function() {
 			console.error(response);
 		}
 	}); 
-}
+};
 
 function getPlayingInfo(mediaType) {
 	// Get details
+	var infoParams;
 	if (mediaType == "audio") {
-		var parms = { "properties": ["title", "album", "artist", "duration", "thumbnail", "file", "fanart", "streamdetails"], "playerid": PLAYER };
+		infoParams = { "properties": ["title", "album", "artist", "duration", "thumbnail", "file", "fanart", "streamdetails"], "playerid": PLAYER };
 	} else if (mediaType == "video") {
-		var parms = { "properties": ["title", "album", "artist", "season", "episode", "duration", "showtitle", "tvshowid", "thumbnail", "file", "fanart", "streamdetails"], "playerid": PLAYER };
+		infoParams = { "properties": ["title", "album", "artist", "season", "episode", "duration", "showtitle", "tvshowid", "thumbnail", "file", "fanart", "streamdetails"], "playerid": PLAYER };
 	} else {
 		console.log("NYI/TODO");
-		return
+		return;
 	}
 	
 	// Update based on value...
 	$.jsonRPC.request('Player.GetItem', {
-		params: parms,
+		params: infoParams,
 		success: function(response) {
 			var item = response.result.item;
 			
-			if (item == null) {
+			if (item === null) {
 				$('#nowplaying').html("Nothing playing");
 			}
 			
@@ -584,17 +583,19 @@ function getPlayingInfo(mediaType) {
 	}); 
 	
 	// Get playlist info...
+	var playlistParams;
 	if (mediaType == "audio") {
-		var parms = { "properties": ["title", "album", "artist", "duration"], "playlistid": 0 };
+		playlistParams = { "properties": ["title", "album", "artist", "duration"], "playlistid": 0 };
 	} else if (mediaType == "video") {
-		var parms = { "properties": [ "runtime", "showtitle", "season", "title", "artist" ], "playlistid": 1}
+		playlistParams = { "properties": [ "runtime", "showtitle", "season", "title", "artist" ], "playlistid": 1};
 	} else {
 		console.log("NYI/TODO");
-		return
+		return;
 	}
+	
 	// TODO: Controls ANPASSEN
 	$.jsonRPC.request('Playlist.GetItems', {
-		params: parms,
+		params: playlistParams,
 		success: function(response) {
 			//console.log(response)
 		},
@@ -617,7 +618,7 @@ function getState() {
 				PLAYER = result.playerid;
 				getPlayingInfo(result.type);
 			} else {
-				if (PLAYER != null) {
+				if (PLAYER !== null) {
 					PLAYER = null;					
 					setActiveControls(false);
 					updateSeekBar();
@@ -642,7 +643,7 @@ function speedUpdate(newSpeed) {
 	if (newSpeed >= 0) {
 		setActiveControls(true);
 	}
-	if (newSpeed == 1 && (SPEED == 0 || SPEED == null)) {
+	if (newSpeed == 1 && (SPEED === 0 || SPEED === null)) {
 		// Was paused, now playing
 		setIsPlaying(false);
 	} else if (newSpeed == 1 && SPEED > 1) {
@@ -651,11 +652,11 @@ function speedUpdate(newSpeed) {
 	} else if (newSpeed == 1 && SPEED < 1) {
 		// Was running backward, now playing
 		setIsReversing(false);
-	} else if (newSpeed == 0 && SPEED > 1) {
+	} else if (newSpeed === 0 && SPEED > 1) {
 		// Was running at higher speed, now paused
-	} else if (newSpeed == 0 && SPEED < 1) {
+	} else if (newSpeed === 0 && SPEED < 1) {
 		// Was running backward, now paused
-	} else if (newSpeed == 0 && (SPEED == 1 || SPEED == null)) {
+	} else if (newSpeed === 0 && (SPEED === 1 || SPEED === null)) {
 		// Was playing, now paused
 		setIsPlaying(true);
 	} else if (newSpeed > 1) {
