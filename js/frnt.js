@@ -403,8 +403,8 @@ var browseDirectory = function(path) {
 			lib.append(rows);
 
 			$.each(results, function (idx, element) {
-				var thumb = $('<div class="directory-item col-sm-3 col-md-2 media-item" title="' + element.label + '"></div>');
-				var link = $('<a href="#!/files/'+element.file+'/" class="thumbnail"></a>');
+				var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="' + element.label + '"></div>');
+				var link = $('<a href="#!/files/'+element.file+'/" class="thumbnail directory-item"></a>');
 				var image = $('<img src="img/folder.png" alt="' + element.label + 'Folder">');
 				var caption = $('<div class="caption"><b>' + element.label + '</b></div>');
 
