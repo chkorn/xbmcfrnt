@@ -223,7 +223,7 @@ var navigationHandler = function() {
 	} else if (hash.match(/^#!\/files\//)) {
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/files/"]').parent().addClass("active");
-		showFiles(hash.substring(9));
+		browseDirectory(hash.substring(9));
 	} else if (hash =="#!/shutdown/") {
 		$.jsonRPC.request('System.Shutdown', {
 			success: function(response) {
@@ -370,34 +370,44 @@ var showLibrary = function(type) {
 	} else if (CURRENT_LIBRARY == "tvshows") {
 		showTVShowsLibrary();
 	} else if (CURRENT_LIBRARY == "files") {
-		showSources();
+		browseDirectory();
 	}
 };
 
-var showSources = function() {
-	var method = "Files.GetSources";
-	var params = {"media": "video"};
-
+var browseDirectory = function(path) {
+	if (!path) {
+		var method = "Files.GetSources";
+		var params = {"media": "video"};
+	} else {
+		var method = "Files.GetDirectory";
+		var params = {"directory": path, "media":"video"};
+	}
+	
 	$.jsonRPC.request(method, {
 		params: params,
 		success: function (response) {
 			$('#loading').hide();
-			var sources = response.result.sources;
-			console.log(sources);
-			if (sources.length == 0) {
+			
+			if (!path) {
+				var results = response.result.sources;
+			} else {
+				var results = response.result.files;
+			}
+			console.log(results);
+			if (results.length == 0) {
 				$('#library').text("No content yet!");
 				return;
 			}
 			var lib = $('#library');
-			lib.html("<h1>Sources</h1>");
+			lib.html("<h1>Browse</h1>");
 
 			var rows = $('<div class="row"/>');
 			lib.append(rows);
 
-			$.each(sources, function (idx, element) {
+			$.each(results, function (idx, element) {
 				var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="' + element.label + '"></div>');
-				var link = $('<a href="#!/files/'+element.file+'/" style="height: 280px" class="thumbnail"></a>');
-				var image = $('<img style="height: 230px;" src="img/folder.png" alt="' + element.label + 'Folder">');
+				var link = $('<a href="#!/files/'+element.file+'/" class="thumbnail"></a>');
+				var image = $('<img src="img/folder.png" alt="' + element.label + 'Folder">');
 				var caption = $('<div class="caption"><b>' + element.label + '</b></div>');
 
 				link.append(image);
@@ -405,108 +415,12 @@ var showSources = function() {
 				thumb.append(link);
 				lib.append(thumb);
 			});
-			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
-
-			// Load additional data when modal is opened...
-			$('#detailModal').on('show.bs.modal', function (event) {
-				var method;
-				var params;
-				var button = $(event.relatedTarget);
-				var itemId = button.data('itemid');
-
-				if (CURRENT_LIBRARY == "movies") {
-					method = "VideoLibrary.GetMovieDetails";
-					params = { "movieid": itemId, "properties": ["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
-				} else if (CURRENT_LIBRARY == "tvshows") {
-					method = "VideoLibrary.GetTVShowDetails";
-					params = { "tvshowid": itemId, "properties": ["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
-				} else {
-					console.error(CURRENT_LIBRARY + " is not yet implemented!");
-				}
-				$.jsonRPC.request(method, {
-					params: params,
-					success: displayModalDetails,
-					error: function (response) {
-						console.error(response);
-					}
-				});
-			});
 		},
 		error: function (response) {
 			console.error(response);
 		}
 	});
 }
-
-var showFiles = function(path) {
-	var method = "Files.GetDirectory";
-	var params = {"directory": path, "media":"video"};
-
-	$.jsonRPC.request(method, {
-		params: params,
-		success: function (response) {
-			$('#loading').hide();
-			var files = response.result.files;
-			if (files.length == 0) {
-				$('#library').text("No content yet!");
-				return;
-			}
-			var lib = $('#library');
-			lib.html("<h1>Directory</h1>");
-
-			var rows = $('<div class="row"/>');
-			lib.append(rows);
-
-			$.each(files, function (idx, element) {
-				if (element.filetype == "directory") {
-					var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="' + element.label + '"></div>');
-					var link = $('<a href="#!/files/'+element.file+'/" style="height: 280px" class="thumbnail"></a>');
-					var image = $('<img style="height: 230px;" src="img/folder.png" alt="' + element.label + 'Folder">');
-					var caption = $('<div class="caption"><b>' + element.label + '</b></div>');
-				} else if (element.filetype == "file") {
-					var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="' + element.label + '"></div>');
-					var link = $('<a href="#!/files/'+element.file+'/" style="height: 280px" class="thumbnail"></a>');
-					var image = $('<img style="height: 230px;" src="img/file.png" alt="' + element.label + 'Folder">');
-					var caption = $('<div class="caption"><b>' + element.label + '</b></div>');
-				}
-
-				link.append(image);
-				link.append(caption);
-				thumb.append(link);
-				lib.append(thumb);
-			});
-			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
-
-			// Load additional data when modal is opened...
-			$('#detailModal').on('show.bs.modal', function (event) {
-				var method;
-				var params;
-				var button = $(event.relatedTarget);
-				var itemId = button.data('itemid');
-
-				if (CURRENT_LIBRARY == "movies") {
-					method = "VideoLibrary.GetMovieDetails";
-					params = { "movieid": itemId, "properties": ["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
-				} else if (CURRENT_LIBRARY == "tvshows") {
-					method = "VideoLibrary.GetTVShowDetails";
-					params = { "tvshowid": itemId, "properties": ["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
-				} else {
-					console.error(CURRENT_LIBRARY + " is not yet implemented!");
-				}
-				$.jsonRPC.request(method, {
-					params: params,
-					success: displayModalDetails,
-					error: function (response) {
-						console.error(response);
-					}
-				});
-			});
-		},
-		error: function (response) {
-			console.error(response);
-		}
-	});
-};
 
 var showMovieLibrary = function() {
 	var method = "VideoLibrary.GetMovies";
