@@ -216,6 +216,10 @@ var navigationHandler = function() {
 		libraryRefresh();
 		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
 		showSeriesDetails(hash.substring(11));
+	} else if (hash =="#!/files/") { 
+		libraryRefresh();
+		$('.navbar-nav').find('a[href="#!/tvshows/"]').parent().addClass("active");
+        showLibrary("files");
 	} else if (hash =="#!/shutdown/") {
 		$.jsonRPC.request('System.Shutdown', {
 			success: function(response) {
@@ -361,7 +365,74 @@ var showLibrary = function(type) {
 		showMovieLibrary();
 	} else if (CURRENT_LIBRARY == "tvshows") {
 		showTVShowsLibrary();
+	} else if (CURRENT_LIBRARY == "files") {
+		showFiles();
 	}
+};
+
+var showFiles = function () {
+    var method = "Files.GetSources";
+    var params = {"media": "video"};
+
+    $.jsonRPC.request(method, {
+        params: params,
+        success: function (response) {
+            $('#loading').hide();
+			var sources = response.result.sources;
+			console.log(sources);
+            if (sources.length == 0) {
+                $('#library').text("No content yet!");
+                return;
+            }
+            var lib = $('#library');
+            lib.html("<h1>Sources</h1>");
+
+            var rows = $('<div class="row"/>');
+            lib.append(rows);
+
+            $.each(sources, function (idx, element) {
+                var thumb = $('<div class="col-sm-3 col-md-2 media-item" title="' + element.title + '"></div>');
+                var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
+                var image = $('<img style="height: 230px;" data-src="/vfs/'+encodeURIComponent(element.thumbnail)+'" src="missing.png" alt="' + element.title + ' Thumbnail">');
+                var caption = $('<div class="caption"><b>' + element.label + '</b></div>');
+
+                link.append(image);
+                link.append(caption);
+                thumb.append(link);
+                lib.append(thumb);
+            });
+			$("img").unveil();
+            //TODO: $(".media-item").popover({html: true, trigger: "hover"});
+
+            // Load additional data when modal is opened...
+            $('#detailModal').on('show.bs.modal', function (event) {
+                var method;
+                var params;
+                var button = $(event.relatedTarget);
+                var itemId = button.data('itemid');
+
+                if (CURRENT_LIBRARY == "movies") {
+                    method = "VideoLibrary.GetMovieDetails";
+                    params = { "movieid": itemId, "properties": ["title", "plot", "year", "genre", "country", "director", "studio", "trailer", "playcount", "cast"]};
+                } else if (CURRENT_LIBRARY == "tvshows") {
+                    method = "VideoLibrary.GetTVShowDetails";
+                    params = { "tvshowid": itemId, "properties": ["title", "plot", "year", "genre", "studio", "playcount", "cast"]};
+                } else {
+                    console.error(CURRENT_LIBRARY + " is not yet implemented!");
+                }
+                $.jsonRPC.request(method, {
+                    params: params,
+                    success: displayModalDetails,
+                    error: function (response) {
+                        console.error(response);
+                    }
+                });
+            });
+        },
+        error: function (response) {
+            console.error(response);
+        }
+    });
 };
 
 var showMovieLibrary = function () {
