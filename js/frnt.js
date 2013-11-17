@@ -10,9 +10,11 @@
 	};
 })(jQuery);
 
-$.jsonRPC.setup({
-  endPoint: '/jsonrpc'
+var RPC = new $.JsonRpcClient({ 
+	ajaxUrl: '/jsonrpc', 
+	socketUrl: 'ws://'+location.hostname+':9090/jsonrpc'
 });
+console.log(RPC);
 
 var VERSION = "0.0.1";
 
@@ -97,16 +99,17 @@ $(document).ready(function() {
 	// Volume
 	$('#volumebar').slider({min: 0, max: 100, value: 50}).on('slide', function(event) {
 		if (this.value) {
-			$.jsonRPC.request('Application.SetVolume', {
-				params: {"volume":this.value},
-				success: function(response) {
+			RPC.call(
+				'Application.SetVolume', 
+				{"volume":this.value},
+				function(response) {
 					LAST_VOLUME_CHANGE = new Date().getTime();
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 					console.error(response);
 				}
-			});
+			);
 		}
 	});
 	$('#seekbar').slider({min: 0, max: 100, value: 50, formater: function(value) {
@@ -117,22 +120,24 @@ $(document).ready(function() {
 			console.log(this.value);
 			var time = moment.duration(this.value, "seconds");
 			console.log({"playerid": 1, "value": {"hours":time.hours(), "minutes":time.minutes(), "seconds": time.seconds(), "milliseconds":0}});
-			$.jsonRPC.request('Player.Seek', {
-				params: {"playerid": 1, "value": {"hours":time.hours(), "minutes":time.minutes(), "seconds": time.seconds(), "milliseconds":0}}, // TODO: Make dynamic someday...
-				success: function(response) {
+			RPC.call(
+				'Player.Seek', 
+				{"playerid": 1, "value": {"hours":time.hours(), "minutes":time.minutes(), "seconds": time.seconds(), "milliseconds":0}}, // TODO: Make dynamic someday...
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 					console.error(response);
 				}
-			});
+			);
 		}
 	});
 	
 	// Device capabilities for Application Menu, etc. 
-	$.jsonRPC.request('System.GetProperties', {
-		params: {"properties": ["canshutdown", "canhibernate", "cansuspend", "canreboot"]},
-		success: function(response) {
+	RPC.call(
+		'System.GetProperties', 
+		{"properties": ["canshutdown", "canhibernate", "cansuspend", "canreboot"]},
+		function(response) {
 			var capabilities = $('#device-capabilities');
 			if (response.result.canshutdown) {
 				capabilities.prepend('<li><a href="#!/shutdown/"><b class="glyphicon glyphicon-off"></b> Shutdown</a></li>');
@@ -148,41 +153,43 @@ $(document).ready(function() {
 			}
 			// TODO: Eject...? 
 		},
-		error: function(response) {
+		function(response) {
 			console.error(response);
 		}
-	});
+	);
 	
 	// Modal for Playlist..
 	$('#playlistModal').on('show.bs.modal', function (event) {
-		$.jsonRPC.request('Playlist.GetItems', {
-			params: {"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode", "file"]}, // TODO: Make dynamic someday...
-			success: function(response) {
+		RPC.call(
+			'Playlist.GetItems', 
+			{"playlistid": 1, "properties":["title", "runtime", "season", "showtitle", "episode", "file"]}, // TODO: Make dynamic someday...
+			function(response) {
 				var playlistContent = $('#playlistContent');
 				console.log(response);
 				playlistContent.render('playlist', {items: response.result.items}).on('render.handlebars', function(content) {
 					playlistContent.find(".play").click(function() {
-						$.jsonRPC.request('Player.Open', {
-							params: { "item": { "playlistid": 1, "position": parseInt($(this).parent().data('position'))}},
-							success: function(response) {
+						RPC.call(
+							'Player.Open', 
+							{ "item": { "playlistid": 1, "position": parseInt($(this).parent().data('position'))}},
+							function(response) {
 								console.log(response);
 							}, 
-							error: function(response) {
+							function(response) {
 								console.error(response);
 							}
-						});
+						);
 					});
 					playlistContent.find(".remove").click(function() {
-						console.log({"playlistid": 1, "position": parseInt($(this).parent().data('position'))});
-						$.jsonRPC.request('Playlist.Remove', {
-							params: { "playlistid": 1, "position": parseInt($(this).parent().data('position'))},
-							success: function(response) {
+						RPC.call(
+							'Playlist.Remove', 
+							{ "playlistid": 1, "position": parseInt($(this).parent().data('position'))},
+							function(response) {
 								console.log(response);
 							}, 
-							error: function(response) {
+							function(response) {
 								console.error(response);
 							}
-						});
+						);
 					});
 					playlistContent.find(".info").click(function() {
 						console.log("NYI");
@@ -190,10 +197,10 @@ $(document).ready(function() {
 				});
 				console.log(response.result.items);
 			},
-			error: function(response) {
+			function(response) {
 				console.error(response);
 			}
-		});
+		);
 	});
 });
 
@@ -221,41 +228,42 @@ var navigationHandler = function() {
 		$('.navbar-nav').find('a[href="#!/files/"]').parent().addClass("active");
 		browseDirectory(hash.substring(9));
 	} else if (hash =="#!/shutdown/") {
-		$.jsonRPC.request('System.Shutdown', {
-			success: function(response) {
+		RPC.call(
+			'System.Shutdown', 
+			function(response) {
 				console.log(response);
 			}, 
-			error: function(response) {
+			function(response) {
 				console.error(response);
 			}
-		});
+		);
 	} else if (hash =="#!/restart/") {
-		$.jsonRPC.request('System.Restart', {
-			success: function(response) {
+		RPC.call('System.Restart', 
+			function(response) {
 				console.log(response);
 			}, 
-			error: function(response) {
+			function(response) {
 				console.error(response);
 			}
-		});
+		);
 	} else if (hash =="#!/hibernate/") {
-		$.jsonRPC.request('System.Hibernate', {
-			success: function(response) {
+		RPC.call('System.Hibernate', 
+			function(response) {
 				console.log(response);
 			}, 
-			error: function(response) {
+			function(response) {
 				console.error(response);
 			}
-		});
+		);
 	} else if (hash =="#!/suspend/") {
-		$.jsonRPC.request('System.Suspend', {
-			success: function(response) {
+		RPC.call('System.Suspend', 
+			function(response) {
 				console.log(response);
 			}, 
-			error: function(response) {
+			function(response) {
 				console.error(response);
 			}
-		});
+		);
 	} else if (hash == "#!/settings/") {
 		libraryRefresh();
 		$('#library').render('settings', {VERSION: VERSION}).on('render.handlebars', function() {
@@ -266,9 +274,10 @@ var navigationHandler = function() {
 
 var showSeriesDetails = function (seriesId) {
 	console.log("Loading " + seriesId);
-	$.jsonRPC.request('VideoLibrary.GetSeasons', {
-		params: { "tvshowid": parseInt(seriesId), "properties": ["showtitle", "season", "fanart", "thumbnail"]},
-		success: function (response) {
+	RPC.call(
+		'VideoLibrary.GetSeasons', 
+		{ "tvshowid": parseInt(seriesId), "properties": ["showtitle", "season", "fanart", "thumbnail"]},
+		function (response) {
 			var seasons = response.result.seasons;
 			var library = $('#library');
 			library.html("<h1>" + seasons[0].showtitle + "</h1>");
@@ -280,52 +289,54 @@ var showSeriesDetails = function (seriesId) {
 
 			$.each(seasons, function (idx, element) {
 				nav.append($('<li' + (element.season == 1 ? ' class="active" ' : '') + ' ><a data-toggle="tab" href="#season-' + element.season + '">Season ' + element.season + '</a></li>'));
-				$.jsonRPC.request('VideoLibrary.GetEpisodes', {
-					params: { "tvshowid": parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail", "playcount"]},
-					success: function (response) {
+				RPC.call(
+					'VideoLibrary.GetEpisodes', 
+					{ "tvshowid": parseInt(seriesId), "season": element.season, "properties": ["showtitle", "episode", "runtime", "title", "fanart", "thumbnail", "playcount"]},
+					function (response) {
 						var episodes = response.result.episodes;
 						var tab = $('<div class="tab-pane' + (element.season == 1 ? ' active' : '') + '" id="season-' + element.season + '"></div>');
 						tab.render('tvshow-episodes', {episodes: episodes});
 						seasonList.append(tab);
 						tab.find('.add-to-playlist').click(function() {
 							console.log({"item":{"episodeid": $(this).parent().data('id')}});
-							$.jsonRPC.request('Playlist.Add', {
-								params: { "playlistid": 1, "item": { "episodeid": parseInt($(this).parent().data('id')) }},
-								success: function(response) {
+							RPC.call(
+								'Playlist.Add', 
+								{ "playlistid": 1, "item": { "episodeid": parseInt($(this).parent().data('id')) }},
+								function(response) {
 									console.log(response);
 								}, 
-								error: function(response) {
+								function(response) {
 									console.error(response);
 								}
-							});
+							);
 						});
 						tab.find(".play").click(function() {
 							console.log({"item":{"episodeid": $(this).parent().data('id')}});
-							$.jsonRPC.request('Player.Open', {
-								params: { "item": { "episodeid": parseInt($(this).parent().data('id')) }},
-								success: function(response) {
+							RPC.call(
+								'Player.Open', 
+								{ "item": { "episodeid": parseInt($(this).parent().data('id')) }},
+								function(response) {
 									console.log(response);
 								}, 
-								error: function(response) {
+								function(response) {
 									console.error(response);
 								}
-							});
+							);
 						});
 						tab.tab(); // TODO: Needed?
 						$('#loading').hide();
 					},
-					error: function (response) {
+					function (response) {
 						console.error(response);
 					}
-				});
+				);
 			});
-
 			$('#loading').hide();
 		},
-		error: function (response) {
+		function (response) {
 			console.error(response);
 		}
-	});
+	);
 };
 
 var libraryRefresh = function() {
@@ -381,9 +392,11 @@ var browseDirectory = function(path) {
 		params = {"directory": path, "media":"video"};
 	}
 	
-	$.jsonRPC.request(method, {
-		params: params,
-		success: function (response) {
+	RPC.call(
+		method, 
+		params,
+		function (response) {
+			console.log(response);
 			$('#loading').hide();
 			
 			var results = null;
@@ -414,19 +427,20 @@ var browseDirectory = function(path) {
 				lib.append(thumb);
 			});
 		},
-		error: function (response) {
+		function (response) {
 			console.error(response);
 		}
-	});
+	);
 };
 
 var showMovieLibrary = function() {
 	var method = "VideoLibrary.GetMovies";
 	var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
 
-	$.jsonRPC.request(method, {
-		params: params,
-		success: function (response) {
+	RPC.call(
+		method, 
+		params,
+		function (response) {
 			$('#loading').hide();
 
 			var results, itemId, name;
@@ -481,25 +495,27 @@ var showMovieLibrary = function() {
 				} else {
 					console.error(CURRENT_LIBRARY + " is not yet implemented!");
 				}
-				$.jsonRPC.request(method, {
-					params: params,
-					success: displayModalDetails,
-					error: function (response) {
+				RPC.call(
+					method, 
+					params,
+					displayModalDetails,
+					function (response) {
 						console.error(response);
 					}
-				});
+				);
 			});
 		},
-		error: function (response) {
+		function (response) {
 			console.error(response);
 		}
-	});
+	);
 };
 
 var showTVShowsLibrary = function() {
-	$.jsonRPC.request("VideoLibrary.GetTVShows", {
-		params: { "properties": ["title", "fanart", "thumbnail", "plot", "playcount"]},
-		success: function(response) {
+	RPC.call(
+		"VideoLibrary.GetTVShows", 
+		{ "properties": ["title", "fanart", "thumbnail", "plot", "playcount"]},
+		function(response) {
 			$('#loading').hide();
 			var results = response.result.tvshows;
 			var itemId = "tvshowid";
@@ -530,10 +546,10 @@ var showTVShowsLibrary = function() {
 			$("img").unveil();
 			//TODO: $(".media-item").popover({html: true, trigger: "hover"});
 		},
-		error: function(response) {
+		function(response) {
 			console.error(response);
 		}
-	}); 
+	); 
 };
 
 function getPlayingInfo(mediaType) {
@@ -549,9 +565,10 @@ function getPlayingInfo(mediaType) {
 	}
 	
 	// Update based on value...
-	$.jsonRPC.request('Player.GetItem', {
-		params: infoParams,
-		success: function(response) {
+	RPC.call(
+		'Player.GetItem', 
+		infoParams,
+		function(response) {
 			var item = response.result.item;
 			
 			if (item === null) {
@@ -577,10 +594,10 @@ function getPlayingInfo(mediaType) {
 			// Update Seekbar...
 			updateSeekBar();
 		},
-		error: function(response) {
+		function(response) {
 			console.error(response);
 		}
-	}); 
+	); 
 	
 	// Get playlist info...
 	var playlistParams;
@@ -594,24 +611,24 @@ function getPlayingInfo(mediaType) {
 	}
 	
 	// TODO: Controls ANPASSEN
-	$.jsonRPC.request('Playlist.GetItems', {
-		params: playlistParams,
-		success: function(response) {
+	RPC.call(
+		'Playlist.GetItems', 
+		playlistParams,
+		function(response) {
 			//console.log(response)
 		},
-		error: function(response) {
+		function(response) {
 			console.error(response);
 		}
-	}); 
-	
-	
+	); 
 }
 
 function getState() {
 	// Get the active players, then get the item details if needed
-	$.jsonRPC.request('Player.GetActivePlayers', {
-		params: [],
-		success: function(response) {
+	RPC.call(
+		'Player.GetActivePlayers', 
+		[],
+		function(response) {
 			if (response.result.length > 0) {
 				var result = response.result[0];
 				
@@ -625,10 +642,10 @@ function getState() {
 				}
 			}
 		},
-		error: function(response) {
+		function(response) {
 			console.log(response);
 		}
-	});
+	);
 }
 
 function speedUpdate(newSpeed) {
@@ -669,11 +686,13 @@ function speedUpdate(newSpeed) {
 
 function updateSeekBar() {
 	if (PLAYER) {
-		$.jsonRPC.batchRequest([
-				{ method: 'Player.GetProperties', params: { "properties": ["percentage", "time", "totaltime", "speed", "position", "playlistid"], "playerid": PLAYER}},
-				{ method: 'Application.GetProperties', params: { "properties": ["volume", "muted"] }}
-			],{
-				success: function(response) {
+		RPC.batch(
+			batch.call(
+				function(batch) {
+					batch.call('Player.GetProperties', { "properties": ["percentage", "time", "totaltime", "speed", "position", "playlistid"], "playerid": PLAYER});
+					batch.call('Application.GetProperties', {"properties": ["volume", "muted"]});
+				},
+				function(response) {
 					var player = response[0].result;
 					var application = response[1].result;
 					
@@ -699,17 +718,15 @@ function updateSeekBar() {
 					if (!LAST_VOLUME_CHANGE || new Date().getTime() > LAST_VOLUME_CHANGE + (2000)) {
 						$("#volumebar").slider("setValue", application.volume);
 					}
-			
 					speedUpdate(player.speed);
-			
 					// Set current time...
 					$('#time').text(formatTime(player.time));
 					$('#totaltime').text(formatTime(player.totaltime));
 				},
-				error: function(result) {
+				function(result) {
 					console.error(result);
 				}
-			}
+			)
 		);
 	} else {
 		// Resetting...
@@ -740,137 +757,148 @@ function setActiveControls(controlState) {
 function bindControls() {
 	$('#control-playpause').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Player.PlayPause', {
-				params: { "playerid": PLAYER },
-				success: function(response) {
+			RPC.call(
+				'Player.PlayPause', 
+				{ "playerid": PLAYER },
+				function(response) {
 					speedUpdate(response.result.speed);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-stop').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Player.Stop', {
-				params: { "playerid": PLAYER },
-				success: function(response) {
+			RPC.call(
+				'Player.Stop', 
+				{ "playerid": PLAYER },
+				function(response) {
 					speedUpdate(response.result.speed);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-back').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Back', {
-				success: function(response) {
+			RPC.call(
+				'Input.Back', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-up').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Up', {
-				success: function(response) {
+			RPC.call(
+				'Input.Up', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-down').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Down', {
-				success: function(response) {
+			RPC.call(
+				'Input.Down', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-left').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Left', {
-				success: function(response) {
+			RPC.call(
+				'Input.Left', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-right').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Right', {
-				success: function(response) {
+			RPC.call(
+				'Input.Right', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-select').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Select', {
-				success: function(response) {
+			RPC.call(
+				'Input.Select', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-home').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.Home', {
-				success: function(response) {
+			RPC.call(
+				'Input.Home', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-info').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Input.ShowOSD', {
-				success: function(response) {
+			RPC.call(
+				'Input.ShowOSD', 
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 				
 				}
-			});
+			);
 		}
 	});
 	$('#control-mute').click(function() {
 		if(!$(this).hasClass("disabled")) {
-			$.jsonRPC.request('Application.SetMute', {
-				params: {"mute":!MUTED},
-				success: function(response) {
+			RPC.call(
+				'Application.SetMute', 
+				{"mute":!MUTED},
+				function(response) {
 					console.log(response);
 				},
-				error: function(response) {
+				function(response) {
 					console.error(response);
 				}
-			});
+			);
 		}
 	});
 }
