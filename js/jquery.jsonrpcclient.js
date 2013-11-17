@@ -215,7 +215,6 @@
    * @memberof $.JsonRpcClient
    */
   $.JsonRpcClient.prototype._wsCall = function(socket, request, success_cb, error_cb) {
-	  console.log(request);
     var request_json = $.toJSON(request);
 
     if (socket.readyState < 1) {

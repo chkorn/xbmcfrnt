@@ -89,7 +89,7 @@ $(document).ready(function() {
 	});
 	
 	// Refresh player every X seconds to make sure we display the correct values...
-	setInterval(getState, 1000);
+	//setInterval(getState, 1000);
 	
 	// Navigation functionality to make urls sexy and bookmarkable	
 	
@@ -139,16 +139,16 @@ $(document).ready(function() {
 		{"properties": ["canshutdown", "canhibernate", "cansuspend", "canreboot"]},
 		function(response) {
 			var capabilities = $('#device-capabilities');
-			if (response.result.canshutdown) {
+			if (response.canshutdown) {
 				capabilities.prepend('<li><a href="#!/shutdown/"><b class="glyphicon glyphicon-off"></b> Shutdown</a></li>');
 			}
-			if (response.result.canreboot) {
+			if (response.canreboot) {
 				capabilities.prepend('<li><a href="#!/reboot/"><b class="glyphicon glyphicon-refresh"></b> Reboot</a></li>');
 			}
-			if (response.result.canhibernate) {
+			if (response.canhibernate) {
 				capabilities.prepend('<li><a href="#!/hibernate/">Hibernate</a></li>');
 			}
-			if (response.result.cansuspend) {
+			if (response.cansuspend) {
 				capabilities.prepend('<li><a href="#!/suspend/">Suspend</a></li>');
 			}
 			// TODO: Eject...? 
@@ -434,39 +434,48 @@ var browseDirectory = function(path) {
 };
 
 var showMovieLibrary = function() {
-	var method = "VideoLibrary.GetMovies";
-	var params = { "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]};
-
+	console.log("MOVIE");
 	RPC.call(
-		method, 
-		params,
-		function (response) {
-			$('#loading').hide();
-
-			var results, itemId, name;
-			if (CURRENT_LIBRARY == "movies") {
-				results = response.result.movies;
-				itemId = "movieid";
-				name = "Movies";
-			} else if (CURRENT_LIBRARY == "tvshows") {
-				results = response.result.tvshows;
-				itemId = "tvshowid";
-				name = "TV Shows";
+		'Player.GetActivePlayers', 
+		[],
+		function(response) {
+			if (response.length > 0) {
+				var result = response[0];
+				
+				PLAYER = result.playerid;
+				getPlayingInfo(result.type);
 			} else {
-				console.error(CURRENT_LIBRARY + " is not yet implemented!");
+				if (PLAYER !== null) {
+					PLAYER = null;
+					setActiveControls(false);
+					updateSeekBar();
+				}
 			}
+		},
+		function(response) {
+			console.log(response);
+		}
+	);
+	RPC.call(
+		'VideoLibrary.GetMovies',
+		{ "properties": ["title", "tagline", "fanart", "thumbnail", "plot", "runtime"]},
+		function (response) {
+			console.log("A");
+			console.log(response);
+			var results = response.movies;
+			console.log(results);
 			if (results.length === 0) {
 				$('#library').text("No content yet!");
 				return;
 			}
 			var lib = $('#library');
-			lib.html("<h1>Your " + name + " (" + results.length + ")</h1>");
+			lib.html("<h1>Your Movies (" + results.length + ")</h1>");
 
 			var rows = $('<div class="row"/>');
 			lib.append(rows);
 
 			$.each(results, function (idx, element) {
-				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="' + CURRENT_LIBRARY + '" data-itemid="' + element[itemId] + '" class="col-sm-3 col-md-2 media-item" title="' + element.title + '"></div>');
+				var thumb = $('<div data-toggle="modal" data-target="#detailModal" data-itemtype="' + CURRENT_LIBRARY + '" data-itemid="' + element['movieid'] + '" class="col-sm-3 col-md-2 media-item" title="' + element.title + '"></div>');
 				var link = $('<a href="#" style="height: 280px" class="thumbnail"></a>');
 				var image = $('<img style="height: 230px;" data-src="/vfs/'+encodeURIComponent(element.thumbnail)+'" src="img/missing.png" alt="' + element.title + ' Thumbnail">');
 				var caption = $('<div class="caption"><b>' + element.title + '</b></div>');
@@ -569,8 +578,7 @@ function getPlayingInfo(mediaType) {
 		'Player.GetItem', 
 		infoParams,
 		function(response) {
-			var item = response.result.item;
-			
+			var item = response.item;
 			if (item === null) {
 				$('#nowplaying').html("Nothing playing");
 			}
@@ -629,14 +637,14 @@ function getState() {
 		'Player.GetActivePlayers', 
 		[],
 		function(response) {
-			if (response.result.length > 0) {
-				var result = response.result[0];
+			if (response.length > 0) {
+				var result = response[0];
 				
 				PLAYER = result.playerid;
 				getPlayingInfo(result.type);
 			} else {
 				if (PLAYER !== null) {
-					PLAYER = null;					
+					PLAYER = null;
 					setActiveControls(false);
 					updateSeekBar();
 				}
